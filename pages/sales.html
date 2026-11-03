@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item active"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Sales</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info">
+        <span id="userEmail">Loading...</span>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="table-card" style="padding:20px; margin-bottom:16px;">
+        <label for="barcodeInput" style="display:block; font-weight:600; margin-bottom:8px;">Scan barcode</label>
+        <input type="text" id="barcodeInput" autocomplete="off" placeholder="Click here, then scan. Each scan adds that product to the same sale." style="width:100%; padding:14px 16px; font-size:18px; border:2px solid #1e3c72; border-radius:8px;">
+        <p id="scanHint" style="margin-top:8px; color:#666; font-size:14px;">Scan the same code again to add one more of that item.</p>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn-primary" id="newSaleBtn">+ New Sale</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search sales...">
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Product</th>
+              <th>Variant</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Payment</th>
+              <th>Customer</th>
+              <th>Sold By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="salesBody"></tbody>
+        </table>
+        <p id="noSales" class="empty-state" style="display:none;">No sales recorded yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="saleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>New Sale</h2>
+        <button class="close-btn" id="closeModal">&times;</button>
+      </div>
+
+      <form id="saleForm">
+        <div class="form-group">
+          <label>Scan barcode</label>
+          <input type="text" id="modalBarcode" autocomplete="off" placeholder="Scan the next product into this sale">
+        </div>
+
+        <div class="form-group">
+          <label>Product</label>
+          <select id="productSelect">
+            <option value="">Select Product</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="variantGroup" style="display:none;">
+          <label>Size / Variant</label>
+          <select id="variantSelect">
+            <option value="">Select Size</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="quantity" min="1" value="1">
+          </div>
+          <div class="form-group">
+            <label>Unit Price (KES)</label>
+            <input type="number" id="unitPrice" min="0" step="0.01">
+          </div>
+        </div>
+
+        <button type="button" class="btn-secondary" id="addLineBtn">Add to sale</button>
+
+        <div id="cartBox" style="margin-top:16px;"></div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>Sale total</label>
+          <input type="text" id="totalAmount" readonly style="background:#f5f5f5; font-weight:600;">
+        </div>
+
+        <!-- Customer -->
+        <div class="form-group">
+          <label>Customer</label>
+          <select id="customerSelect">
+            <option value="">Walk-in / type a new name below</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>New customer name (optional)</label>
+          <input type="text" id="customerName" placeholder="Leave blank for walk-in">
+        </div>
+
+        <!-- Payment -->
+        <div class="form-group">
+          <label>Payment Method *</label>
+          <select id="paymentMethod" required>
+            <option value="">Select Method</option>
+            <option value="Cash">Cash</option>
+            <option value="Till">Till</option>
+            <option value="Bank">Bank</option>
+            <option value="Mixed">Mixed</option>
+            <option value="Credit">Credit (pay later)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Amount paid now (KES)</label>
+          <input type="number" id="amountPaid" min="0" step="0.01" placeholder="How much did they pay today?">
+          <p id="balanceLine" style="margin-top:6px; font-size:14px; font-weight:600; color:#1e7a46;">Balance still owed: KES 0</p>
+          <p style="margin-top:4px; font-size:13px; color:#666;">
+            Full total for a normal sale. Lower it if the customer pays part now and the rest later.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn-primary">Complete Sale</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from '../js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    let currentUser = null;
+    let allProducts = [];
+    let allCustomers = [];
+    let canDelete = false;
+    let cart = [];
+
+    const session = await guard("sales");
+    currentUser = session.user;
+    canDelete = session.profile.role === "admin";
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    const modal = document.getElementById('saleModal');
+    const barcodeInput = document.getElementById('barcodeInput');
+    const paidInput = document.getElementById('amountPaid');
+    const methodSelect = document.getElementById('paymentMethod');
+    const customerSelect = document.getElementById('customerSelect');
+    const customerNameInput = document.getElementById('customerName');
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"]/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+      }[ch]));
+    }
+
+    function focusScan() {
+      barcodeInput.value = "";
+      barcodeInput.focus();
+    }
+
+    function openFreshSale() {
+      cart = [];
+      document.getElementById('saleForm').reset();
+      document.getElementById('quantity').value = 1;
+      document.getElementById('variantGroup').style.display = "none";
+      customerSelect.value = "";
+      customerNameInput.value = "";
+      customerNameInput.disabled = false;
+      paidInput.value = "";
+      delete paidInput.dataset.lastTotal;
+      renderCart();
+      modal.style.display = "flex";
+    }
+
+    document.getElementById('newSaleBtn').addEventListener('click', openFreshSale);
+    document.getElementById('closeModal').addEventListener('click', () => {
+      modal.style.display = "none";
+      focusScan();
+    });
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      modal.style.display = "none";
+      focusScan();
+    });
+
+    // ---------- Payment methods (from Cash & Bank accounts) ----------
+    async function loadPaymentMethods() {
+      try {
+        const snapshot = await getDocs(query(collection(db, "accounts"), orderBy("name")));
+        if (snapshot.empty) return;
+        const keep = methodSelect.value;
+        let html = `<option value="">Select Method</option>`;
+        snapshot.forEach((docSnap) => {
+          const name = docSnap.data().name;
+          if (name) html += `<option value="${esc(name)}">${esc(name)}</option>`;
+        });
+        html += `<option value="Mixed">Mixed</option>`;
+        html += `<option value="Credit">Credit (pay later)</option>`;
+        methodSelect.innerHTML = html;
+        methodSelect.value = keep;
+      } catch (error) {
+        // keep the default options if accounts cannot be loaded
+      }
+    }
+
+    // ---------- Customers ----------
+    async function loadCustomers() {
+      const snapshot = await getDocs(query(collection(db, "customers"), orderBy("name")));
+      allCustomers = [];
+      const keep = customerSelect.value;
+      customerSelect.innerHTML = `<option value="">Walk-in / type a new name below</option>`;
+      snapshot.forEach(docSnap => {
+        const data = { id: docSnap.id, ...docSnap.data() };
+        allCustomers.push(data);
+        customerSelect.innerHTML += `<option value="${data.id}">${esc(data.name)}</option>`;
+      });
+      customerSelect.value = keep;
+    }
+
+    customerSelect.addEventListener('change', () => {
+      const picked = customerSelect.value !== "";
+      customerNameInput.disabled = picked;
+      if (picked) customerNameInput.value = "";
+    });
+
+    // ---------- Products ----------
+    async function loadProductsForSelect() {
+      const snapshot = await getDocs(query(collection(db, "products"), orderBy("name")));
+      allProducts = [];
+      const select = document.getElementById('productSelect');
+      select.innerHTML = `<option value="">Select Product</option>`;
+      snapshot.forEach(docSnap => {
+        const data = { id: docSnap.id, ...docSnap.data() };
+        allProducts.push(data);
+        select.innerHTML += `<option value="${data.id}">${esc(data.name)}</option>`;
+      });
+    }
+
+    function fillVariantOptions(product, selectedIndex) {
+      const variantGroup = document.getElementById('variantGroup');
+      const variantSelect = document.getElementById('variantSelect');
+      if (product && product.hasVariants && product.variants) {
+        variantGroup.style.display = "block";
+        variantSelect.innerHTML = `<option value="">Select Size</option>`;
+        product.variants.forEach((v, index) => {
+          variantSelect.innerHTML += `<option value="${index}">${esc(v.size)} (Stock: ${v.stock})</option>`;
+        });
+        if (selectedIndex !== null && selectedIndex !== undefined && selectedIndex !== "") {
+          variantSelect.value = String(selectedIndex);
+        }
+      } else {
+        variantGroup.style.display = "none";
+        variantSelect.innerHTML = `<option value="">Select Size</option>`;
+      }
+    }
+
+    document.getElementById('productSelect').addEventListener('change', (e) => {
+      const product = allProducts.find(p => p.id === e.target.value);
+      const unitPrice = document.getElementById('unitPrice');
+      fillVariantOptions(product, "");
+      if (product && product.hasVariants) unitPrice.value = "";
+      else unitPrice.value = product ? (product.selling || 0) : "";
+    });
+
+    document.getElementById('variantSelect').addEventListener('change', (e) => {
+      const product = allProducts.find(p => p.id === document.getElementById('productSelect').value);
+      if (product && product.variants && e.target.value !== "") {
+        const v = product.variants[Number(e.target.value)];
+        document.getElementById('unitPrice').value = v ? (v.selling || 0) : "";
+      }
+    });
+
+    function stockOf(product, variant) {
+      if (!variant) return Number(product.stock) || 0;
+      const match = (product.variants || []).find((v) => v.size === variant);
+      return match ? Number(match.stock) || 0 : 0;
+    }
+
+    function qtyInCart(productId, variant) {
+      return cart
+        .filter((line) => line.productId === productId && (line.variant || null) === (variant || null))
+        .reduce((sum, line) => sum + line.quantity, 0);
+    }
+
+    function cartTotal() {
+      return cart.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
+    }
+
+    // ---------- Balance line ----------
+    function updateBalanceLine() {
+      const total = cartTotal();
+      const paid = Number(paidInput.value) || 0;
+      const balance = Math.max(0, Math.round((total - paid) * 100) / 100);
+      const line = document.getElementById('balanceLine');
+      line.textContent = "Balance still owed: KES " + balance.toLocaleString();
+      line.style.color = balance > 0 ? "#c0392b" : "#1e7a46";
+    }
+
+    paidInput.addEventListener('input', updateBalanceLine);
+
+    methodSelect.addEventListener('change', () => {
+      const total = cartTotal();
+      if (methodSelect.value === "Credit") {
+        paidInput.value = 0;
+      } else if ((paidInput.value === "" || Number(paidInput.value) === 0) && total > 0) {
+        paidInput.value = total;
+      }
+      paidInput.dataset.lastTotal = total;
+      updateBalanceLine();
+    });
+
+    function renderCart() {
+      const box = document.getElementById('cartBox');
+      const total = cartTotal();
+      document.getElementById('totalAmount').value = "KES " + total.toLocaleString();
+
+      // Keep "amount paid" in step with the total, unless the user has changed it
+      if (methodSelect.value === "Credit") {
+        paidInput.value = 0;
+      } else if (paidInput.value === "" || Number(paidInput.dataset.lastTotal) === Number(paidInput.value)) {
+        paidInput.value = total > 0 ? total : "";
+      }
+      paidInput.dataset.lastTotal = total;
+      updateBalanceLine();
+
+      if (!cart.length) {
+        box.innerHTML = `<p style="color:#666; font-size:14px;">No items yet. Scan or add a product.</p>`;
+        return;
+      }
+      box.innerHTML = cart.map((line, index) => `
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
+          <div>
+            <strong>${esc(line.productName)}</strong>${line.variant ? " (" + esc(line.variant) + ")" : ""}
+            <div style="color:#666; font-size:13px;">${line.quantity} × KES ${Number(line.unitPrice).toLocaleString()}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong>KES ${(line.quantity * line.unitPrice).toLocaleString()}</strong>
+            <button type="button" class="btn-remove" data-index="${index}">×</button>
+          </div>
+        </div>
+      `).join("");
+      box.querySelectorAll(".btn-remove").forEach((button) => {
+        button.addEventListener("click", () => {
+          cart.splice(Number(button.dataset.index), 1);
+          renderCart();
+        });
+      });
+    }
+
+    function addLine(product, variant, quantity, unitPrice) {
+      const available = stockOf(product, variant);
+      const already = qtyInCart(product.id, variant);
+      if (quantity < 1) return alert("Quantity must be at least 1.");
+      if (already + quantity > available) {
+        alert(`Only ${available} in stock` + (already ? `. Already in this sale: ${already}` : "") + ".");
+        return false;
+      }
+      const existing = cart.find((line) => line.productId === product.id && (line.variant || null) === (variant || null));
+      if (existing) {
+        existing.quantity += quantity;
+        existing.unitPrice = unitPrice;
+      } else {
+        cart.push({
+          productId: product.id,
+          productName: product.name,
+          variant: variant || null,
+          quantity,
+          unitPrice
+        });
+      }
+      renderCart();
+      const name = product.name + (variant ? " (" + variant + ")" : "");
+      document.getElementById('scanHint').textContent = name + " added. Sale total KES " + cartTotal().toLocaleString();
+      return true;
+    }
+
+    document.getElementById('addLineBtn').addEventListener('click', () => {
+      const product = allProducts.find((p) => p.id === document.getElementById('productSelect').value);
+      if (!product) return alert("Select a product");
+      let variant = null;
+      if (product.hasVariants) {
+        const index = document.getElementById('variantSelect').value;
+        if (index === "") return alert("Select a size");
+        variant = product.variants[Number(index)].size;
+      }
+      const quantity = Number(document.getElementById('quantity').value);
+      const unitPrice = Number(document.getElementById('unitPrice').value);
+      if (Number.isNaN(unitPrice)) return alert("Enter the price");
+      if (addLine(product, variant, quantity, unitPrice)) {
+        document.getElementById('quantity').value = 1;
+      }
+    });
+
+    function findByBarcode(code) {
+      const needle = code.trim().toLowerCase();
+      if (!needle) return null;
+      for (const product of allProducts) {
+        if (!product.hasVariants && String(product.barcode || "").toLowerCase() === needle) {
+          return { product, variant: null };
+        }
+        if (product.variants) {
+          const match = product.variants.find((v) => String(v.barcode || "").toLowerCase() === needle);
+          if (match) return { product, variant: match.size };
+        }
+      }
+      return null;
+    }
+
+    function handleScan(raw) {
+      const code = String(raw || "").trim();
+      barcodeInput.value = "";
+      document.getElementById('modalBarcode').value = "";
+      if (!code) return;
+
+      const found = findByBarcode(code);
+      if (!found) {
+        document.getElementById('scanHint').textContent = "No product uses barcode " + code + ".";
+        alert("No product uses barcode " + code + ".");
+        focusScan();
+        return;
+      }
+
+      if (modal.style.display !== "flex") openFreshSale();
+      const price = found.variant
+        ? Number((found.product.variants.find((v) => v.size === found.variant) || {}).selling) || 0
+        : Number(found.product.selling) || 0;
+      addLine(found.product, found.variant, 1, price);
+    }
+
+    barcodeInput.addEventListener('keydown', (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      handleScan(barcodeInput.value);
+    });
+    document.getElementById('modalBarcode').addEventListener('keydown', (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      handleScan(e.target.value);
+    });
+
+    // ---------- Complete Sale ----------
+    document.getElementById('saleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!cart.length) return alert("Add at least one product.");
+
+      const paymentMethod = methodSelect.value;
+      if (!paymentMethod) return alert("Choose how they paid.");
+
+      const total = cartTotal();
+      let amountPaid = Number(paidInput.value);
+      if (Number.isNaN(amountPaid) || amountPaid < 0) {
+        return alert("Enter a valid amount paid (0 or more).");
+      }
+      amountPaid = Math.round(amountPaid * 100) / 100;
+      if (amountPaid > total) {
+        return alert("Amount paid cannot be more than the sale total.");
+      }
+
+      // Credit means nothing was paid now. Nothing paid means Credit.
+      let finalPaymentMethod = paymentMethod;
+      if (paymentMethod === "Credit") amountPaid = 0;
+      else if (amountPaid === 0) finalPaymentMethod = "Credit";
+
+      const balance = Math.round((total - amountPaid) * 100) / 100;
+
+      // Who is the customer?
+      let customerId = customerSelect.value || null;
+      let customerName = "Walk-in";
+      let newCustomerName = "";
+      if (customerId) {
+        const picked = allCustomers.find((c) => c.id === customerId);
+        if (!picked) return alert("Choose the customer again.");
+        customerName = picked.name;
+      } else {
+        const typed = customerNameInput.value.trim();
+        if (typed && typed.toLowerCase() !== "walk-in") {
+          const existing = allCustomers.find((c) => String(c.name || "").trim().toLowerCase() === typed.toLowerCase());
+          if (existing) {
+            customerId = existing.id;
+            customerName = existing.name;
+          } else {
+            newCustomerName = typed;
+            customerName = typed;
+          }
+        }
+      }
+
+      // A debt must belong to a named customer
+      if (balance > 0 && !customerId && !newCustomerName) {
+        return alert("This sale has a balance of KES " + balance.toLocaleString() + ". Choose a customer or type the customer's name so the debt is recorded.");
+      }
+
+      for (const line of cart) {
+        const product = allProducts.find((p) => p.id === line.productId);
+        if (!product) return alert(line.productName + " is no longer in products.");
+        const available = stockOf(product, line.variant);
+        const wanted = qtyInCart(line.productId, line.variant);
+        if (wanted > available) return alert(`Not enough stock for ${line.productName}. Available: ${available}`);
+      }
+
+      try {
+        // 0. Create the customer if it is a new name
+        if (newCustomerName) {
+          const ref = await addDoc(collection(db, "customers"), {
+            name: newCustomerName,
+            phone: "",
+            email: "",
+            notes: "",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          customerId = ref.id;
+        }
+
+        // 1. Deduct stock
+        const groups = new Map();
+        cart.forEach((line) => {
+          if (!groups.has(line.productId)) groups.set(line.productId, []);
+          groups.get(line.productId).push(line);
+        });
+
+        for (const [productId, lines] of groups) {
+          const product = allProducts.find((p) => p.id === productId);
+          if (product.hasVariants) {
+            const variants = product.variants.map((v) => ({ ...v }));
+            lines.forEach((line) => {
+              const idx = variants.findIndex((v) => v.size === line.variant);
+              if (idx !== -1) variants[idx].stock = (Number(variants[idx].stock) || 0) - line.quantity;
+            });
+            const totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+            await updateDoc(doc(db, "products", productId), { variants, totalStock, updatedAt: serverTimestamp() });
+          } else {
+            const qty = lines.reduce((sum, line) => sum + line.quantity, 0);
+            const next = (Number(product.stock) || 0) - qty;
+            await updateDoc(doc(db, "products", productId), {
+              stock: next,
+              totalStock: next,
+              updatedAt: serverTimestamp()
+            });
+          }
+        }
+
+        // 2. Build sale document
+        const items = cart.map((line) => ({
+          productId: line.productId,
+          productName: line.productName,
+          variant: line.variant,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          total: line.quantity * line.unitPrice
+        }));
+        const quantity = items.reduce((sum, line) => sum + line.quantity, 0);
+        const one = items.length === 1;
+
+        await addDoc(collection(db, "sales"), {
+          items,
+          productId: one ? items[0].productId : null,
+          productName: items.map((line) => line.productName + (line.variant ? " (" + line.variant + ")" : "")).join(", "),
+          variant: one ? items[0].variant : null,
+          quantity,
+          unitPrice: one ? items[0].unitPrice : null,
+          total,                    // full sale value
+          amountPaid,               // only what was paid now
+          balance,                  // what the customer still owes
+          paymentMethod: finalPaymentMethod,
+          customerId,
+          customerName,
+          userEmail: currentUser.email,
+          createdAt: serverTimestamp()
+        });
+
+        // 3. Stock movements
+        for (const line of items) {
+          await addDoc(collection(db, "stock_movements"), {
+            type: "out",
+            productId: line.productId,
+            productName: line.productName,
+            variant: line.variant,
+            quantity: line.quantity,
+            reason: `Sale to ${customerName}`,
+            userEmail: currentUser.email,
+            createdAt: serverTimestamp()
+          });
+        }
+
+        cart = [];
+        modal.style.display = "none";
+        document.getElementById('scanHint').textContent = "Sale saved. Ready for the next scan.";
+        loadSales();
+        await loadProductsForSelect();
+        await loadCustomers();
+        focusScan();
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
+
+    // ---------- Helpers for old + new sales ----------
+    function saleLines(data) {
+      if (data.items && data.items.length) return data.items;
+      return [{
+        productId: data.productId,
+        productName: data.productName,
+        variant: data.variant,
+        quantity: data.quantity,
+        unitPrice: data.unitPrice,
+        total: data.total
+      }];
+    }
+
+    // Old sales (no amountPaid field) count as fully paid
+    function getPaidAndBalance(data) {
+      const total = Number(data.total) || 0;
+      if (data.amountPaid === undefined || data.amountPaid === null) {
+        return { paid: total, balance: 0 };
+      }
+      const paid = Number(data.amountPaid) || 0;
+      const balance = data.balance !== undefined ? Number(data.balance) : Math.max(0, total - paid);
+      return { paid, balance };
+    }
+
+    async function loadSales() {
+      const tbody = document.getElementById('salesBody');
+      const noSales = document.getElementById('noSales');
+      tbody.innerHTML = "";
+
+      const q = query(collection(db, "sales"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        noSales.style.display = "block";
+        return;
+      }
+      noSales.style.display = "none";
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const lines = saleLines(data);
+        const several = lines.length > 1;
+        const date = data.createdAt ? data.createdAt.toDate().toLocaleString() : "-";
+        const productText = lines.map((line) => `${line.productName || ""}${line.variant ? " (" + line.variant + ")" : ""} × ${line.quantity}`).join(", ");
+        const qty = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+        const { paid, balance } = getPaidAndBalance(data);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${esc(date)}</td>
+          <td>${esc(productText)}</td>
+          <td>${several ? "-" : esc(lines[0].variant || "-")}</td>
+          <td>${qty}</td>
+          <td>${several ? "-" : "KES " + Number(lines[0].unitPrice || 0).toLocaleString()}</td>
+          <td><strong>KES ${Number(data.total || 0).toLocaleString()}</strong></td>
+          <td>KES ${paid.toLocaleString()}</td>
+          <td>${balance > 0 ? `<span style="color:#c0392b;font-weight:600;">KES ${balance.toLocaleString()}</span>` : "—"}</td>
+          <td>${esc(data.paymentMethod || "-")}</td>
+          <td>${esc(data.customerName || "Walk-in")}</td>
+          <td>${esc(data.userEmail)}</td>
+          <td>${canDelete ? `<button class="btn-delete" data-id="${docSnap.id}">Delete</button>` : "-"}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteSale(btn.dataset.id));
+      });
+    }
+
+    async function deleteSale(saleId) {
+      if (!canDelete) return;
+      if (!confirm("Are you sure you want to delete this sale?\nStock will be returned.")) return;
+
+      try {
+        const salesSnap = await getDocs(collection(db, "sales"));
+        let sale = null;
+        salesSnap.forEach(docSnap => {
+          if (docSnap.id === saleId) sale = { id: docSnap.id, ...docSnap.data() };
+        });
+        if (!sale) return;
+
+        const productSnap = await getDocs(collection(db, "products"));
+        const products = [];
+        productSnap.forEach(docSnap => products.push({ id: docSnap.id, ...docSnap.data() }));
+
+        const lines = saleLines(sale);
+        const groups = new Map();
+        lines.forEach((line) => {
+          if (!line.productId) return;
+          if (!groups.has(line.productId)) groups.set(line.productId, []);
+          groups.get(line.productId).push(line);
+        });
+
+        for (const [productId, group] of groups) {
+          const product = products.find((item) => item.id === productId);
+          if (!product) continue;
+          if (product.hasVariants) {
+            const variants = product.variants.map((v) => ({ ...v }));
+            group.forEach((line) => {
+              const idx = variants.findIndex((v) => v.size === line.variant);
+              if (idx !== -1) variants[idx].stock = (Number(variants[idx].stock) || 0) + (Number(line.quantity) || 0);
+            });
+            const totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+            await updateDoc(doc(db, "products", product.id), { variants, totalStock });
+          } else {
+            const qty = group.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+            const next = (Number(product.stock) || 0) + qty;
+            await updateDoc(doc(db, "products", product.id), { stock: next, totalStock: next });
+          }
+        }
+
+        await deleteDoc(doc(db, "sales", saleId));
+        loadSales();
+        await loadProductsForSelect();
+        alert("Sale deleted and stock restored.");
+      } catch (error) {
+        alert("Error deleting sale: " + error.message);
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('#salesBody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+      });
+    });
+
+    // Init
+    renderCart();
+    loadSales();
+    await loadProductsForSelect();
+    await loadCustomers();
+    await loadPaymentMethods();
+    focusScan();
+  </script>
+
+</body>
+</html>

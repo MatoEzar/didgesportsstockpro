@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+  <script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Reports</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info"><span id="userEmail">Loading...</span></div>
+    </header>
+
+    <section class="page-content">
+      <div class="actions-bar" style="margin-bottom:20px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label style="font-weight:600;">Period</label>
+          <select id="periodSelect">
+            <option value="today">Today</option>
+            <option value="month" selected>This month</option>
+            <option value="year">This year</option>
+            <option value="all">All time</option>
+          </select>
+          <button type="button" class="btn-secondary" id="refreshBtn">Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px; padding:20px;">
+        <h3 style="color:#1e3c72; margin-bottom:12px;">Profit &amp; Loss</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Sales revenue</h3>
+            <p class="stat-number" id="plRevenue">KES 0</p>
+            <small id="plSaleCount">0 sales</small>
+          </div>
+          <div class="stat-card">
+            <h3>Cost of goods sold</h3>
+            <p class="stat-number" id="plCogs">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Gross profit</h3>
+            <p class="stat-number" id="plGross">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Expenses</h3>
+            <p class="stat-number" id="plExpenses">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Net profit</h3>
+            <p class="stat-number" id="plNet">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Cash collected</h3>
+            <p class="stat-number" id="plCollected">KES 0</p>
+            <small>Amount paid on sales in period</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Sales by payment method</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Method</th><th>Sales</th><th>Revenue</th><th>Collected</th></tr>
+          </thead>
+          <tbody id="payBody"></tbody>
+        </table>
+        <p id="noPay" class="empty-state" style="display:none; padding:20px;">No sales in this period.</p>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Debtors (customers who owe)</h3>
+        <p style="padding:0 20px 10px; color:#666; font-size:14px;">Total owed: <strong id="debtorsTotal">KES 0</strong></p>
+        <table class="data-table">
+          <thead>
+            <tr><th>Customer</th><th>Sales</th><th>Invoiced</th><th>Paid</th><th>Balance</th></tr>
+          </thead>
+          <tbody id="debtorsBody"></tbody>
+        </table>
+        <p id="noDebtors" class="empty-state" style="display:none; padding:20px;">No open customer balances.</p>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Creditors (suppliers you owe)</h3>
+        <p style="padding:0 20px 10px; color:#666; font-size:14px;">Total owed: <strong id="creditorsTotal">KES 0</strong></p>
+        <table class="data-table">
+          <thead>
+            <tr><th>Supplier</th><th>Purchases</th><th>Paid</th><th>Balance</th></tr>
+          </thead>
+          <tbody id="creditorsBody"></tbody>
+        </table>
+        <p id="noCreditors" class="empty-state" style="display:none; padding:20px;">No open supplier balances.</p>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Cash position</h3>
+        <p style="padding:0 20px 10px; color:#666; font-size:14px;">Total in accounts: <strong id="cashTotal">KES 0</strong></p>
+        <table class="data-table">
+          <thead>
+            <tr><th>Account</th><th>Type</th><th>Balance</th></tr>
+          </thead>
+          <tbody id="cashBody"></tbody>
+        </table>
+        <p id="noCash" class="empty-state" style="display:none; padding:20px;">No cash accounts yet.</p>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Stock value</h3>
+        <div class="stats-grid" style="padding:0 20px 20px;">
+          <div class="stat-card">
+            <h3>At cost</h3>
+            <p class="stat-number" id="stockCost">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>At selling price</h3>
+            <p class="stat-number" id="stockRetail">KES 0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px; padding:20px;">
+        <h3 style="color:#1e3c72; margin-bottom:12px;">Simple position</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Item</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Cash &amp; bank</td><td id="balCash">KES 0</td></tr>
+            <tr><td>Stock at cost</td><td id="balStock">KES 0</td></tr>
+            <tr><td>Debtors (customers owe you)</td><td id="balDebtors">KES 0</td></tr>
+            <tr><td><strong>Assets total</strong></td><td><strong id="balAssets">KES 0</strong></td></tr>
+            <tr><td>Creditors (you owe suppliers)</td><td id="balCreditors">KES 0</td></tr>
+            <tr><td><strong>Net position (assets − creditors)</strong></td><td><strong id="balNet">KES 0</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card" style="margin-bottom:20px;">
+        <h3 style="padding:15px 20px 10px; color:#1e3c72;">Expenses by category (period)</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Category</th><th>Amount</th></tr>
+          </thead>
+          <tbody id="expBody"></tbody>
+        </table>
+        <p id="noExp" class="empty-state" style="display:none; padding:20px;">No expenses in this period.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    const money = (n) => "KES " + Math.round(Number(n || 0)).toLocaleString();
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    await guard("reports");
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+
+    let sales = [];
+    let expenses = [];
+    let purchases = [];
+    let supplierPayments = [];
+    let products = [];
+    let accounts = [];
+    let transfers = [];
+    let adjustments = [];
+
+    function periodRange() {
+      const now = new Date();
+      const mode = document.getElementById("periodSelect").value;
+      if (mode === "all") return { start: null };
+      if (mode === "today") {
+        return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate()) };
+      }
+      if (mode === "month") {
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1) };
+      }
+      return { start: new Date(now.getFullYear(), 0, 1) };
+    }
+
+    function inPeriod(ts) {
+      if (!ts || !ts.toDate) return false;
+      const { start } = periodRange();
+      if (!start) return true;
+      return ts.toDate() >= start;
+    }
+
+    function saleLines(sale) {
+      if (sale.items && sale.items.length) return sale.items;
+      return [{
+        productId: sale.productId,
+        quantity: sale.quantity,
+        unitCost: sale.unitCost,
+        cost: sale.cost,
+        variant: sale.variant
+      }];
+    }
+
+    function productCostMap() {
+      const map = {};
+      products.forEach((p) => {
+        if (p.hasVariants && p.variants) {
+          p.variants.forEach((v) => {
+            map[p.id + "|" + (v.size || "")] = Number(v.cost) || 0;
+          });
+        } else {
+          map[p.id + "|"] = Number(p.cost) || 0;
+        }
+      });
+      return map;
+    }
+
+    function saleCogs(sale, costMap) {
+      let cogs = 0;
+      saleLines(sale).forEach((line) => {
+        const qty = Number(line.quantity) || 0;
+        if (line.unitCost != null && !isNaN(Number(line.unitCost))) {
+          cogs += qty * Number(line.unitCost);
+          return;
+        }
+        if (line.cost != null && !isNaN(Number(line.cost))) {
+          cogs += qty * Number(line.cost);
+          return;
+        }
+        const key = (line.productId || "") + "|" + (line.variant || "");
+        cogs += qty * (costMap[key] || costMap[(line.productId || "") + "|"] || 0);
+      });
+      return cogs;
+    }
+
+    function salePaid(sale) {
+      if (sale.amountPaid != null) return Number(sale.amountPaid) || 0;
+      if (sale.balance != null) return Math.max(0, (Number(sale.total) || 0) - (Number(sale.balance) || 0));
+      return Number(sale.total) || 0;
+    }
+
+    function saleBalance(sale) {
+      if (sale.balance != null) return Number(sale.balance) || 0;
+      if (sale.amountPaid != null) return Math.max(0, (Number(sale.total) || 0) - (Number(sale.amountPaid) || 0));
+      return 0;
+    }
+
+    function accountBalance(account) {
+      const name = account.name;
+      let bal = Number(account.openingBalance) || 0;
+      sales.forEach((sale) => {
+        if (sale.paymentMethod === name) bal += salePaid(sale);
+        if (sale.payments && sale.payments.length) {
+          sale.payments.forEach((p) => {
+            if (p.method === name) bal += Number(p.amount) || 0;
+          });
+        }
+      });
+      expenses.forEach((ex) => {
+        if (ex.accountName === name) bal -= Number(ex.amount) || 0;
+      });
+      supplierPayments.forEach((pay) => {
+        if (pay.method === name || pay.accountName === name) bal -= Number(pay.amount) || 0;
+      });
+      transfers.forEach((t) => {
+        if (t.fromName === name || t.fromId === account.id) bal -= Number(t.amount) || 0;
+        if (t.toName === name || t.toId === account.id) bal += Number(t.amount) || 0;
+      });
+      adjustments.forEach((j) => {
+        if (j.accountId !== account.id && j.accountName !== name) return;
+        if (j.direction === "out") bal -= Number(j.amount) || 0;
+        else bal += Number(j.amount) || 0;
+      });
+      return bal;
+    }
+
+    async function loadAll() {
+      const [
+        sSnap, eSnap, pSnap, paySnap, prodSnap, aSnap, tSnap, jSnap
+      ] = await Promise.all([
+        getDocs(query(collection(db, "sales"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "expenses"), orderBy("createdAt", "desc"))),
+        getDocs(collection(db, "purchases")),
+        getDocs(collection(db, "supplier_payments")),
+        getDocs(collection(db, "products")),
+        getDocs(query(collection(db, "accounts"), orderBy("name"))),
+        getDocs(collection(db, "transfers")),
+        getDocs(collection(db, "cash_adjustments"))
+      ]);
+      sales = sSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      expenses = eSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      purchases = pSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      supplierPayments = paySnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      products = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      accounts = aSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      transfers = tSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      adjustments = jSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      render();
+    }
+
+    function render() {
+      const costMap = productCostMap();
+      const periodSales = sales.filter((s) => inPeriod(s.createdAt));
+      const periodExp = expenses.filter((e) => inPeriod(e.createdAt));
+
+      let revenue = 0, collected = 0, cogs = 0;
+      periodSales.forEach((s) => {
+        revenue += Number(s.total) || 0;
+        collected += salePaid(s);
+        cogs += saleCogs(s, costMap);
+      });
+      let expTotal = 0;
+      periodExp.forEach((e) => { expTotal += Number(e.amount) || 0; });
+      const gross = revenue - cogs;
+      const net = gross - expTotal;
+
+      document.getElementById("plRevenue").textContent = money(revenue);
+      document.getElementById("plSaleCount").textContent = periodSales.length + " sales";
+      document.getElementById("plCogs").textContent = money(cogs);
+      document.getElementById("plGross").textContent = money(gross);
+      document.getElementById("plExpenses").textContent = money(expTotal);
+      document.getElementById("plNet").textContent = money(net);
+      document.getElementById("plCollected").textContent = money(collected);
+      document.getElementById("plNet").style.color = net >= 0 ? "#1e7a46" : "#c0392b";
+
+      const byPay = {};
+      periodSales.forEach((s) => {
+        const m = s.paymentMethod || "Unknown";
+        if (!byPay[m]) byPay[m] = { count: 0, revenue: 0, collected: 0 };
+        byPay[m].count++;
+        byPay[m].revenue += Number(s.total) || 0;
+        byPay[m].collected += salePaid(s);
+      });
+      const payBody = document.getElementById("payBody");
+      payBody.innerHTML = "";
+      const payKeys = Object.keys(byPay);
+      document.getElementById("noPay").style.display = payKeys.length ? "none" : "block";
+      payKeys.forEach((m) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(m)}</td><td>${byPay[m].count}</td>
+          <td>${money(byPay[m].revenue)}</td><td>${money(byPay[m].collected)}</td>`;
+        payBody.appendChild(tr);
+      });
+
+      const debtors = {};
+      sales.forEach((s) => {
+        const bal = saleBalance(s);
+        if (bal <= 0) return;
+        const name = (s.customerName || "Walk-in").trim() || "Walk-in";
+        if (!debtors[name]) debtors[name] = { count: 0, invoiced: 0, paid: 0, balance: 0 };
+        debtors[name].count++;
+        debtors[name].invoiced += Number(s.total) || 0;
+        debtors[name].paid += salePaid(s);
+        debtors[name].balance += bal;
+      });
+      const dBody = document.getElementById("debtorsBody");
+      dBody.innerHTML = "";
+      const dKeys = Object.keys(debtors).sort((a, b) => debtors[b].balance - debtors[a].balance);
+      let dTotal = 0;
+      document.getElementById("noDebtors").style.display = dKeys.length ? "none" : "block";
+      dKeys.forEach((name) => {
+        dTotal += debtors[name].balance;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(name)}</td><td>${debtors[name].count}</td>
+          <td>${money(debtors[name].invoiced)}</td><td>${money(debtors[name].paid)}</td>
+          <td><strong>${money(debtors[name].balance)}</strong></td>`;
+        dBody.appendChild(tr);
+      });
+      document.getElementById("debtorsTotal").textContent = money(dTotal);
+
+      const creditors = {};
+      purchases.forEach((p) => {
+        const key = p.supplierId || p.supplierName || "Unknown";
+        if (!creditors[key]) creditors[key] = { name: p.supplierName || "Supplier", purchases: 0, paid: 0 };
+        creditors[key].purchases += Number(p.amount) || 0;
+        if (p.supplierName) creditors[key].name = p.supplierName;
+      });
+      supplierPayments.forEach((p) => {
+        const key = p.supplierId || p.supplierName || "Unknown";
+        if (!creditors[key]) creditors[key] = { name: p.supplierName || "Supplier", purchases: 0, paid: 0 };
+        creditors[key].paid += Number(p.amount) || 0;
+        if (p.supplierName) creditors[key].name = p.supplierName;
+      });
+      const cBody = document.getElementById("creditorsBody");
+      cBody.innerHTML = "";
+      let cTotal = 0;
+      const cRows = Object.values(creditors)
+        .map((c) => ({ ...c, balance: c.purchases - c.paid }))
+        .filter((c) => c.balance > 0.009)
+        .sort((a, b) => b.balance - a.balance);
+      document.getElementById("noCreditors").style.display = cRows.length ? "none" : "block";
+      cRows.forEach((c) => {
+        cTotal += c.balance;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(c.name)}</td><td>${money(c.purchases)}</td>
+          <td>${money(c.paid)}</td><td><strong>${money(c.balance)}</strong></td>`;
+        cBody.appendChild(tr);
+      });
+      document.getElementById("creditorsTotal").textContent = money(cTotal);
+
+      const cashBody = document.getElementById("cashBody");
+      cashBody.innerHTML = "";
+      let cashSum = 0;
+      document.getElementById("noCash").style.display = accounts.length ? "none" : "block";
+      accounts.forEach((a) => {
+        const bal = accountBalance(a);
+        cashSum += bal;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(a.name)}</td><td>${esc(a.type || "-")}</td>
+          <td><strong>${money(bal)}</strong></td>`;
+        cashBody.appendChild(tr);
+      });
+      document.getElementById("cashTotal").textContent = money(cashSum);
+
+      let stockCost = 0, stockRetail = 0;
+      products.forEach((p) => {
+        if (p.hasVariants && p.variants) {
+          p.variants.forEach((v) => {
+            const qty = Number(v.stock) || 0;
+            stockCost += qty * (Number(v.cost) || 0);
+            stockRetail += qty * (Number(v.selling) || 0);
+          });
+        } else {
+          const qty = Number(p.stock) || 0;
+          stockCost += qty * (Number(p.cost) || 0);
+          stockRetail += qty * (Number(p.selling) || 0);
+        }
+      });
+      document.getElementById("stockCost").textContent = money(stockCost);
+      document.getElementById("stockRetail").textContent = money(stockRetail);
+
+      document.getElementById("balCash").textContent = money(cashSum);
+      document.getElementById("balStock").textContent = money(stockCost);
+      document.getElementById("balDebtors").textContent = money(dTotal);
+      const assets = cashSum + stockCost + dTotal;
+      document.getElementById("balAssets").textContent = money(assets);
+      document.getElementById("balCreditors").textContent = money(cTotal);
+      document.getElementById("balNet").textContent = money(assets - cTotal);
+
+      const byCat = {};
+      periodExp.forEach((e) => {
+        const c = e.category || "Other";
+        byCat[c] = (byCat[c] || 0) + (Number(e.amount) || 0);
+      });
+      const expBody = document.getElementById("expBody");
+      expBody.innerHTML = "";
+      const catKeys = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]);
+      document.getElementById("noExp").style.display = catKeys.length ? "none" : "block";
+      catKeys.forEach((c) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(c)}</td><td><strong>${money(byCat[c])}</strong></td>`;
+        expBody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("periodSelect").addEventListener("change", render);
+    document.getElementById("refreshBtn").addEventListener("click", loadAll);
+
+    await loadAll();
+  </script>
+</body>
+</html>

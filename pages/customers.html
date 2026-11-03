@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .print-only { display:none; }
+    .statement td.num, .statement th.num { text-align:right; }
+    .owes { color:#c0392b; font-weight:700; }
+    .clear { color:#1e7a46; font-weight:700; }
+    .sub { color:#777; font-size:12px; }
+    @media print {
+      .sidebar, .topbar, .actions-bar, .stats-grid, #customersCard, .modal, #netBanner, .no-print { display:none !important; }
+      .main-content { margin-left:0 !important; }
+      .page-content { padding:0 !important; }
+      .print-only { display:block; text-align:center; margin-bottom:16px; }
+      .table-card { box-shadow:none; }
+      body { background:white; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item active"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Customers</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info"><span id="userEmail">Loading...</span></div>
+    </header>
+
+    <section class="page-content">
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Customers</h3>
+          <p class="stat-number" id="statCount">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total owed to us</h3>
+          <p class="stat-number warning" id="statOwed">KES 0</p>
+          <small id="statOwing"></small>
+        </div>
+        <div class="stat-card">
+          <h3>Total bought (all customers)</h3>
+          <p class="stat-number" id="statBought">KES 0</p>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-primary" id="addCustomerBtn" style="width:auto; padding:11px 20px; font-size:14px;">+ Add Customer</button>
+          <label style="font-size:14px; color:#444;">
+            <input type="checkbox" id="owingOnly"> Only customers who owe
+          </label>
+        </div>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search name or phone...">
+        </div>
+      </div>
+
+      <div class="table-card" id="customersCard">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Total bought</th>
+              <th>Total paid</th>
+              <th>Owes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="customersBody"></tbody>
+        </table>
+        <p id="noCustomers" class="empty-state" style="display:none;">No customers yet. Click “Add Customer” to start.</p>
+      </div>
+
+      <div id="detailSection" style="display:none; margin-top:25px;">
+        <div class="print-only">
+          <h2 style="color:#1e3c72;">Didge Sports</h2>
+          <p>Customer statement &middot; <span id="printDate"></span></p>
+        </div>
+
+        <div class="actions-bar">
+          <div>
+            <h2 id="detailTitle" style="color:#1e3c72; font-size:20px;"></h2>
+            <p id="detailContact" style="margin-top:4px; color:#666; font-size:14px;"></p>
+          </div>
+          <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-primary" id="payBtn" style="width:auto; padding:10px 18px; font-size:14px;">+ Receive payment</button>
+            <button class="btn-secondary" id="printBtn">Print / Save PDF</button>
+            <button class="btn-secondary" id="closeDetailBtn">Close</button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <h3>Total bought</h3>
+            <p class="stat-number" id="detailBought">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total paid</h3>
+            <p class="stat-number" id="detailPaid">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Balance owed</h3>
+            <p class="stat-number" id="detailOwed">KES 0</p>
+            <small id="detailOwedNote"></small>
+          </div>
+        </div>
+
+        <div class="table-card statement">
+          <h3 style="padding:15px 20px 5px; color:#1e3c72;">Statement</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Details</th>
+                <th class="num">Bought</th>
+                <th class="num">Paid</th>
+                <th class="num">Balance</th>
+                <th class="no-print"></th>
+              </tr>
+            </thead>
+            <tbody id="statementBody"></tbody>
+          </table>
+          <p id="noStatement" class="empty-state" style="display:none;">Nothing recorded for this customer yet.</p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div class="modal" id="customerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="customerModalTitle">Add Customer</h2>
+        <button class="close-btn" data-close="customerModal">&times;</button>
+      </div>
+      <form id="customerForm">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="customerName" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="customerPhone">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="customerEmail">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" id="customerNotes" placeholder="Team, school, anything useful">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="customerModal">Cancel</button>
+          <button type="submit" class="btn-primary" style="width:auto; padding:10px 22px; font-size:14px;">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="payModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Receive payment</h2>
+        <button class="close-btn" data-close="payModal">&times;</button>
+      </div>
+      <form id="payForm">
+        <p id="payInfo" style="margin-bottom:16px; color:#666;"></p>
+        <div class="form-group">
+          <label>Amount (KES) *</label>
+          <input type="number" id="payAmount" min="1" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Paid into *</label>
+          <select id="payAccount" required></select>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="payNote" placeholder="e.g. M-Pesa code, part payment">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="payModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="savePayBtn" style="width:auto; padding:10px 22px; font-size:14px;">Save payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    let currentUser = null;
+    let isAdmin = false;
+    let customers = [];
+    let sales = [];
+    let payments = [];
+    let accounts = [];
+    let selectedId = null;
+    let editingId = null;
+
+    const money = (n) => "KES " + Number(n || 0).toLocaleString();
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const timeOf = (ts) => (ts && ts.toDate ? ts.toDate().getTime() : 0);
+    const when = (ts) => (ts && ts.toDate ? ts.toDate().toLocaleString() : "-");
+    const $ = (id) => document.getElementById(id);
+
+    const session = await guard("customers");
+    currentUser = session.user;
+    isAdmin = session.profile.role === "admin";
+
+    $("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+    $("menuToggle").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+    document.querySelectorAll("[data-close]").forEach((el) => {
+      el.addEventListener("click", () => { $(el.dataset.close).style.display = "none"; });
+    });
+    const show = (id) => { $(id).style.display = "flex"; };
+
+    async function refresh() {
+      const [cSnap, sSnap, pSnap, aSnap] = await Promise.all([
+        getDocs(query(collection(db, "customers"), orderBy("name"))),
+        getDocs(query(collection(db, "sales"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "customer_payments"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "accounts"), orderBy("name")))
+      ]);
+      customers = cSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      sales = sSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      payments = pSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      accounts = aSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderList();
+      if (selectedId) renderDetail();
+    }
+
+    // A sale belongs to a customer by id, or (older sales) by matching name.
+    function salesOf(c) {
+      const name = String(c.name || "").trim().toLowerCase();
+      return sales.filter((s) => {
+        if (s.customerId) return s.customerId === c.id;
+        const n = String(s.customerName || "").trim().toLowerCase();
+        return n && n !== "walk-in" && n === name;
+      });
+    }
+    function paymentsOf(c) {
+      return payments.filter((p) => p.customerId === c.id);
+    }
+    // Sales without amountPaid are old sales: treated as fully paid.
+    const paidOnSale = (s) => (s.amountPaid === undefined || s.amountPaid === null ? Number(s.total || 0) : Number(s.amountPaid || 0));
+
+    function summary(c) {
+      const mySales = salesOf(c);
+      const bought = mySales.reduce((n, s) => n + Number(s.total || 0), 0);
+      const paidAtSale = mySales.reduce((n, s) => n + paidOnSale(s), 0);
+      const later = paymentsOf(c).reduce((n, p) => n + Number(p.amount || 0), 0);
+      const paid = paidAtSale + later;
+      return { mySales, bought, paid, owed: bought - paid };
+    }
+
+    // Every item of a sale on its own line (works for old single-item sales too)
+    function saleItemsHtml(sale) {
+      const items = sale.items && sale.items.length
+        ? sale.items
+        : [{ productName: sale.productName, variant: sale.variant, quantity: sale.quantity, unitPrice: sale.unitPrice }];
+      return items.map((i) =>
+        `${esc(i.productName || "Item")}${i.variant ? " (" + esc(i.variant) + ")" : ""} × ${esc(i.quantity)} @ ${money(i.unitPrice)}`
+      ).join("<br>");
+    }
+
+    function saleNoteHtml(sale) {
+      const paid = paidOnSale(sale);
+      const method = sale.paymentMethod;
+      if (method === "Credit" || paid <= 0) return `<br><span class="sub">On credit, nothing paid at the time</span>`;
+      if (method) return `<br><span class="sub">Paid ${money(paid)} via ${esc(method)}</span>`;
+      return "";
+    }
+
+    function renderList() {
+      const term = $("searchInput").value.toLowerCase();
+      const owingOnly = $("owingOnly").checked;
+      let totalOwed = 0, totalBought = 0, owingCount = 0;
+      customers.forEach((c) => {
+        const s = summary(c);
+        totalBought += s.bought;
+        if (s.owed > 0.5) { totalOwed += s.owed; owingCount++; }
+      });
+      $("statCount").textContent = customers.length;
+      $("statOwed").textContent = money(totalOwed);
+      $("statOwing").textContent = owingCount + " customer" + (owingCount === 1 ? "" : "s") + " owing";
+      $("statBought").textContent = money(totalBought);
+
+      const list = customers.filter((c) => {
+        const match = (c.name || "").toLowerCase().includes(term) || (c.phone || "").toLowerCase().includes(term);
+        if (!match) return false;
+        return !owingOnly || summary(c).owed > 0.5;
+      });
+      const tbody = $("customersBody");
+      tbody.innerHTML = "";
+      $("noCustomers").style.display = list.length ? "none" : "block";
+      list.forEach((c) => {
+        const s = summary(c);
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.innerHTML = `
+          <td><strong>${esc(c.name)}</strong></td>
+          <td>${esc(c.phone) || "-"}</td>
+          <td>${money(s.bought)}</td>
+          <td>${money(s.paid)}</td>
+          <td class="${s.owed > 0.5 ? "owes" : "clear"}">${s.owed > 0.5 ? money(s.owed) : s.owed < -0.5 ? "Credit " + money(-s.owed) : "Settled"}</td>
+          <td>
+            <button class="btn-edit" data-edit="${c.id}">Edit</button>
+            <button class="btn-delete" data-del="${c.id}">Delete</button>
+          </td>`;
+        tr.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          selectedId = c.id;
+          renderDetail();
+          $("detailSection").scrollIntoView({ behavior: "smooth" });
+        });
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => editCustomer(b.dataset.edit)));
+      tbody.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => deleteCustomer(b.dataset.del)));
+    }
+    $("searchInput").addEventListener("input", renderList);
+    $("owingOnly").addEventListener("change", renderList);
+
+    function renderDetail() {
+      const c = customers.find((x) => x.id === selectedId);
+      const section = $("detailSection");
+      if (!c) { section.style.display = "none"; return; }
+      section.style.display = "block";
+      const s = summary(c);
+      $("printDate").textContent = new Date().toLocaleDateString();
+      $("detailTitle").textContent = c.name;
+      $("detailContact").textContent = [c.phone, c.email, c.notes].filter(Boolean).join("  ·  ");
+      $("detailBought").textContent = money(s.bought);
+      $("detailPaid").textContent = money(s.paid);
+      $("detailOwed").textContent = money(Math.max(s.owed, 0));
+      $("detailOwed").style.color = s.owed > 0.5 ? "#c0392b" : "#1e7a46";
+      $("detailOwedNote").textContent = s.owed > 0.5 ? "Still to pay" : s.owed < -0.5 ? "Customer has credit of " + money(-s.owed) : "Fully paid";
+
+      // Ledger: each sale is a charge (with what was paid at the time), each later payment a credit.
+      const entries = [];
+      s.mySales.forEach((sale) => {
+        entries.push({
+          t: timeOf(sale.createdAt), date: sale.createdAt,
+          html: saleItemsHtml(sale) + saleNoteHtml(sale),
+          bought: Number(sale.total || 0), paid: paidOnSale(sale), payId: null
+        });
+      });
+      paymentsOf(c).forEach((p) => {
+        entries.push({
+          t: timeOf(p.createdAt), date: p.createdAt,
+          html: `Payment received into ${esc(p.accountName || "-")}${p.note ? " — " + esc(p.note) : ""}`,
+          bought: 0, paid: Number(p.amount || 0), payId: p.id
+        });
+      });
+      entries.sort((a, b) => a.t - b.t);
+
+      const body = $("statementBody");
+      body.innerHTML = "";
+      $("noStatement").style.display = entries.length ? "none" : "block";
+      let running = 0;
+      entries.forEach((e) => {
+        running += e.bought - e.paid;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(when(e.date))}</td>
+          <td>${e.html}</td>
+          <td class="num">${e.bought ? money(e.bought) : "-"}</td>
+          <td class="num">${e.paid ? money(e.paid) : "-"}</td>
+          <td class="num ${running > 0.5 ? "owes" : "clear"}">${money(running)}</td>
+          <td class="no-print">${e.payId && isAdmin ? `<button class="btn-delete" data-pay="${e.payId}">Delete</button>` : ""}</td>`;
+        body.appendChild(tr);
+      });
+      body.querySelectorAll("[data-pay]").forEach((b) => b.addEventListener("click", () => deletePayment(b.dataset.pay)));
+    }
+
+    $("closeDetailBtn").addEventListener("click", () => { selectedId = null; $("detailSection").style.display = "none"; });
+    $("printBtn").addEventListener("click", () => window.print());
+
+    // ----- customers -----
+    $("addCustomerBtn").addEventListener("click", () => {
+      editingId = null;
+      $("customerModalTitle").textContent = "Add Customer";
+      $("customerForm").reset();
+      show("customerModal");
+    });
+    function editCustomer(id) {
+      const c = customers.find((x) => x.id === id);
+      if (!c) return;
+      editingId = id;
+      $("customerModalTitle").textContent = "Edit Customer";
+      $("customerName").value = c.name || "";
+      $("customerPhone").value = c.phone || "";
+      $("customerEmail").value = c.email || "";
+      $("customerNotes").value = c.notes || "";
+      show("customerModal");
+    }
+    $("customerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = $("customerName").value.trim();
+      const clash = customers.find((c) => c.id !== editingId && c.name.trim().toLowerCase() === name.toLowerCase());
+      if (clash) return alert("A customer called " + clash.name + " already exists.");
+      const data = {
+        name,
+        phone: $("customerPhone").value.trim(),
+        email: $("customerEmail").value.trim(),
+        notes: $("customerNotes").value.trim(),
+        updatedAt: serverTimestamp()
+      };
+      if (editingId) await updateDoc(doc(db, "customers", editingId), data);
+      else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db, "customers"), data);
+      }
+      $("customerModal").style.display = "none";
+      await refresh();
+    });
+    async function deleteCustomer(id) {
+      const c = customers.find((x) => x.id === id);
+      if (!c) return;
+      if (summary(c).mySales.length || paymentsOf(c).length) {
+        return alert(c.name + " already has sales or payments, so they cannot be deleted.");
+      }
+      if (!confirm("Delete " + c.name + "?")) return;
+      await deleteDoc(doc(db, "customers", id));
+      if (selectedId === id) selectedId = null;
+      await refresh();
+    }
+
+    // ----- payments -----
+    $("payBtn").addEventListener("click", () => {
+      const c = customers.find((x) => x.id === selectedId);
+      if (!c) return;
+      if (!accounts.length) return alert("Open Cash & Bank and add an account first.");
+      const s = summary(c);
+      $("payForm").reset();
+      $("payInfo").textContent = c.name + (s.owed > 0.5 ? " owes " + money(s.owed) + "." : " has no balance owing.");
+      $("payAmount").value = s.owed > 0.5 ? s.owed : "";
+      $("payAccount").innerHTML = accounts.map((a) => `<option value="${esc(a.name)}">${esc(a.name)}</option>`).join("");
+      show("payModal");
+    });
+    $("payForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const c = customers.find((x) => x.id === selectedId);
+      if (!c) return;
+      const amount = Number($("payAmount").value);
+      if (!(amount > 0)) return alert("Enter the amount received.");
+      const owed = summary(c).owed;
+      if (amount > owed + 0.5 && !confirm("This is more than the " + money(Math.max(owed, 0)) + " owed. Record it anyway as credit?")) return;
+
+      const accountName = $("payAccount").value;
+      const account = accounts.find((a) => a.name === accountName);
+      const button = $("savePayBtn");
+      button.disabled = true;
+      button.textContent = "Saving...";
+      try {
+        // Cash & Bank counts this record as money in, so nothing else is needed.
+        await addDoc(collection(db, "customer_payments"), {
+          customerId: c.id,
+          customerName: c.name,
+          amount,
+          accountId: account ? account.id : null,
+          accountName,
+          note: $("payNote").value.trim() || null,
+          userEmail: currentUser.email,
+          createdAt: serverTimestamp()
+        });
+        $("payModal").style.display = "none";
+        await refresh();
+      } catch (error) {
+        alert("Could not save the payment: " + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Save payment";
+      }
+    });
+    async function deletePayment(id) {
+      if (!isAdmin) return;
+      if (!confirm("Delete this payment? The customer's balance goes back up and the account balance goes down.")) return;
+      await deleteDoc(doc(db, "customer_payments", id));
+      await refresh();
+    }
+
+    await refresh();
+  </script>
+</body>
+</html>

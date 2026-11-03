@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expenses | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item active"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Expenses</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info"><span id="userEmail">Loading...</span></div>
+    </header>
+
+    <section class="page-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Today</h3>
+          <p class="stat-number" id="todayTotal">KES 0</p>
+        </div>
+        <div class="stat-card">
+          <h3>This month</h3>
+          <p class="stat-number" id="monthTotal">KES 0</p>
+        </div>
+        <div class="stat-card">
+          <h3>This year</h3>
+          <p class="stat-number" id="yearTotal">KES 0</p>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn-primary" id="addBtn">+ Add expense</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search expenses...">
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Paid from</th>
+              <th>Staff</th>
+              <th>Note</th>
+              <th>By</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expensesBody"></tbody>
+        </table>
+        <p id="noExpenses" class="empty-state" style="display:none;">No expenses yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="expenseModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add expense</h2>
+        <button class="close-btn" data-close="expenseModal">&times;</button>
+      </div>
+      <form id="expenseForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="category" required></select>
+          </div>
+          <div class="form-group">
+            <label>Amount (KES) *</label>
+            <input type="number" id="amount" min="1" step="0.01" required>
+          </div>
+        </div>
+        <div class="form-group" id="newCategoryGroup" style="display:none;">
+          <label>New category name *</label>
+          <input type="text" id="newCategory" placeholder="e.g. Licences, Security, Cleaning">
+        </div>
+        <div class="form-group">
+          <label>Paid from (Cash / Till / Bank) *</label>
+          <select id="accountName" required></select>
+        </div>
+        <div class="form-group">
+          <label>Staff (optional)</label>
+          <select id="staffSelect">
+            <option value="">— None —</option>
+          </select>
+          <small style="color:#666; display:block; margin-top:4px;">Use this for salaries, advances, or any cost tied to a person.</small>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="note" placeholder="What was this for?">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="expenseModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    const DEFAULT_CATEGORIES = ["Rent", "Salaries", "Transport", "Utilities", "Airtime", "Supplies", "Repairs", "Marketing", "Other"];
+    const NEW_CATEGORY = "__new__";
+
+    let currentUser = null;
+    let expenses = [];
+    let accounts = [];
+    let staffList = [];
+    let editingId = null;
+
+    const money = (n) => "KES " + Number(n || 0).toLocaleString();
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    const session = await guard("expenses");
+    currentUser = session.user;
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+    document.querySelectorAll("[data-close]").forEach((el) => {
+      el.addEventListener("click", () => {
+        document.getElementById(el.dataset.close).style.display = "none";
+      });
+    });
+
+    async function refresh() {
+      const [eSnap, aSnap, uSnap] = await Promise.all([
+        getDocs(query(collection(db, "expenses"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "accounts"), orderBy("name"))),
+        getDocs(collection(db, "users"))
+      ]);
+      expenses = eSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      accounts = aSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      staffList = uSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((u) => u.active !== false)
+        .sort((a, b) => String(a.name || a.email || "").localeCompare(String(b.name || b.email || "")));
+      render();
+    }
+
+    function staffLabel(u) {
+      const name = u.name || "Staff";
+      const role = u.role ? " (" + u.role + ")" : "";
+      return name + role + " — " + (u.email || "");
+    }
+
+    function render() {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      let today = 0, month = 0, year = 0;
+      expenses.forEach((ex) => {
+        if (!ex.createdAt) return;
+        const d = ex.createdAt.toDate();
+        const amount = Number(ex.amount || 0);
+        if (d >= todayStart) today += amount;
+        if (d >= monthStart) month += amount;
+        if (d >= yearStart) year += amount;
+      });
+      document.getElementById("todayTotal").textContent = money(today);
+      document.getElementById("monthTotal").textContent = money(month);
+      document.getElementById("yearTotal").textContent = money(year);
+
+      const term = document.getElementById("searchInput").value.toLowerCase();
+      const list = expenses.filter((ex) =>
+        (ex.category || "").toLowerCase().includes(term) ||
+        (ex.note || "").toLowerCase().includes(term) ||
+        (ex.accountName || "").toLowerCase().includes(term) ||
+        (ex.staffName || "").toLowerCase().includes(term) ||
+        (ex.staffEmail || "").toLowerCase().includes(term)
+      );
+      const body = document.getElementById("expensesBody");
+      body.innerHTML = "";
+      document.getElementById("noExpenses").style.display = list.length ? "none" : "block";
+      list.forEach((ex) => {
+        const date = ex.createdAt ? ex.createdAt.toDate().toLocaleString() : "-";
+        const staffCell = ex.staffName
+          ? esc(ex.staffName) + (ex.staffEmail ? "<br><small>" + esc(ex.staffEmail) + "</small>" : "")
+          : "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${esc(ex.category)}</td>
+          <td><strong>${money(ex.amount)}</strong></td>
+          <td>${esc(ex.accountName)}</td>
+          <td>${staffCell}</td>
+          <td>${esc(ex.note || "-")}</td>
+          <td>${esc(ex.userEmail || "-")}</td>
+          <td>
+            <button class="btn-edit" data-edit="${ex.id}">Edit</button>
+            <button class="btn-delete" data-del="${ex.id}">Delete</button>
+          </td>`;
+        body.appendChild(tr);
+      });
+      body.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => editExpense(b.dataset.edit)));
+      body.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => deleteExpense(b.dataset.del)));
+    }
+
+    document.getElementById("searchInput").addEventListener("input", render);
+
+    function allCategories() {
+      const list = [...DEFAULT_CATEGORIES.filter((c) => c !== "Other")];
+      const lower = new Set(list.map((c) => c.toLowerCase()));
+      expenses.forEach((ex) => {
+        const c = String(ex.category || "").trim();
+        if (c && c !== "Other" && !lower.has(c.toLowerCase())) {
+          lower.add(c.toLowerCase());
+          list.push(c);
+        }
+      });
+      list.push("Other");
+      return list;
+    }
+
+    function fillCategories(selected) {
+      const select = document.getElementById("category");
+      const cats = allCategories();
+      if (selected && !cats.some((c) => c.toLowerCase() === selected.toLowerCase())) {
+        cats.splice(cats.length - 1, 0, selected);
+      }
+      select.innerHTML =
+        cats.map((c) => `<option value="${c}">${c}</option>`).join("") +
+        `<option value="${NEW_CATEGORY}">+ Add new category…</option>`;
+      if (selected) {
+        const match = cats.find((c) => c.toLowerCase() === selected.toLowerCase());
+        if (match) select.value = match;
+      }
+      toggleNewCategory();
+    }
+
+    function toggleNewCategory() {
+      const isNew = document.getElementById("category").value === NEW_CATEGORY;
+      document.getElementById("newCategoryGroup").style.display = isNew ? "block" : "none";
+      document.getElementById("newCategory").required = isNew;
+      if (isNew) document.getElementById("newCategory").focus();
+    }
+    document.getElementById("category").addEventListener("change", toggleNewCategory);
+
+    function fillAccounts(selected) {
+      const select = document.getElementById("accountName");
+      if (!accounts.length) {
+        select.innerHTML = `<option value="">Open Cash &amp; Bank and add Cash, Till or Bank first</option>`;
+        return;
+      }
+      select.innerHTML = accounts.map((a) => {
+        const type = a.type ? ` (${a.type})` : "";
+        return `<option value="${esc(a.name)}">${esc(a.name)}${esc(type)}</option>`;
+      }).join("");
+      if (selected) {
+        const match = accounts.find((a) => a.name === selected);
+        if (match) select.value = match.name;
+      }
+    }
+
+    function fillStaff(selectedId) {
+      const select = document.getElementById("staffSelect");
+      select.innerHTML = `<option value="">— None —</option>` +
+        staffList.map((u) =>
+          `<option value="${u.id}">${esc(staffLabel(u))}</option>`
+        ).join("");
+      if (selectedId) select.value = selectedId;
+    }
+
+    document.getElementById("addBtn").addEventListener("click", () => {
+      editingId = null;
+      document.getElementById("modalTitle").textContent = "Add expense";
+      document.getElementById("expenseForm").reset();
+      fillCategories();
+      fillAccounts();
+      fillStaff();
+      document.getElementById("expenseModal").style.display = "flex";
+    });
+
+    function editExpense(id) {
+      const ex = expenses.find((x) => x.id === id);
+      if (!ex) return;
+      editingId = id;
+      document.getElementById("modalTitle").textContent = "Edit expense";
+      document.getElementById("expenseForm").reset();
+      fillCategories(ex.category || "Other");
+      document.getElementById("amount").value = ex.amount || "";
+      document.getElementById("note").value = ex.note || "";
+      fillAccounts(ex.accountName);
+      fillStaff(ex.staffId || "");
+      document.getElementById("expenseModal").style.display = "flex";
+    }
+
+    document.getElementById("expenseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!accounts.length) return alert("Create Cash, Till, or Bank first on the Cash & Bank page.");
+
+      let category = document.getElementById("category").value;
+      if (category === NEW_CATEGORY) {
+        category = document.getElementById("newCategory").value.trim();
+        if (!category) return alert("Type the name of the new category.");
+        const existing = allCategories().find((c) => c.toLowerCase() === category.toLowerCase());
+        if (existing) category = existing;
+      }
+
+      const accountName = document.getElementById("accountName").value;
+      if (!accountName) return alert("Choose which account this was paid from.");
+
+      const staffId = document.getElementById("staffSelect").value;
+      const staff = staffId ? staffList.find((u) => u.id === staffId) : null;
+
+      const data = {
+        category,
+        amount: Number(document.getElementById("amount").value),
+        accountName,
+        staffId: staff ? staff.id : null,
+        staffName: staff ? (staff.name || null) : null,
+        staffEmail: staff ? (staff.email || null) : null,
+        note: document.getElementById("note").value.trim() || null,
+        updatedAt: serverTimestamp()
+      };
+      if (editingId) {
+        await updateDoc(doc(db, "expenses", editingId), data);
+      } else {
+        data.userEmail = currentUser.email;
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db, "expenses"), data);
+      }
+      document.getElementById("expenseModal").style.display = "none";
+      await refresh();
+    });
+
+    async function deleteExpense(id) {
+      if (!confirm("Delete this expense? The money returns to that account.")) return;
+      await deleteDoc(doc(db, "expenses", id));
+      await refresh();
+    }
+
+    await refresh();
+  </script>
+</body>
+</html>

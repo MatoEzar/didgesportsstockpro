@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="manifest.webmanifest">
+<script src="js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <h1>Didge Sports</h1>
+        <p>Stock Pro</p>
+      </div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required placeholder="name@gmail.com" autocomplete="off">
+        </div>
+        <div class="form-group" id="passwordGroup">
+          <label for="password">Password</label>
+          <input type="password" id="password" required autocomplete="new-password">
+        </div>
+        <p id="formMessage" style="display:none; margin-bottom:14px; font-size:14px;"></p>
+        <button type="submit" class="btn-primary" id="submitBtn">Sign in</button>
+      </form>
+
+      <p style="text-align:center; margin-top:18px;">
+        <button type="button" id="forgotToggle" style="background:none; border:none; color:#1e3c72; font-weight:600; cursor:pointer;">Forgot password?</button>
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth } from "./js/firebase-config.js";
+    import {
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+
+    const form = document.getElementById("loginForm");
+    const passwordGroup = document.getElementById("passwordGroup");
+    const passwordInput = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("formMessage");
+    const toggle = document.getElementById("forgotToggle");
+    let resetMode = false;
+
+    function showMessage(text, ok) {
+      message.style.display = "block";
+      message.style.color = ok ? "#1e7a46" : "#c0392b";
+      message.textContent = text;
+    }
+
+    toggle.addEventListener("click", () => {
+      resetMode = !resetMode;
+      passwordGroup.style.display = resetMode ? "none" : "block";
+      passwordInput.required = !resetMode;
+      submitBtn.textContent = resetMode ? "Send reset link" : "Sign in";
+      toggle.textContent = resetMode ? "Back to sign in" : "Forgot password?";
+      message.style.display = "none";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      submitBtn.disabled = true;
+
+      try {
+        if (resetMode) {
+          await sendPasswordResetEmail(auth, email);
+          showMessage("If this email is registered, a reset link is on its way. Check the inbox and the spam folder.", true);
+        } else {
+          await signInWithEmailAndPassword(auth, email, passwordInput.value);
+          window.location.href = "pages/dashboard.html";
+        }
+      } catch (error) {
+        const known = {
+          "auth/invalid-email": "Enter a real email address.",
+          "auth/user-not-found": "No account uses that email yet.",
+          "auth/wrong-password": "Wrong password.",
+          "auth/invalid-credential": "Email or password is wrong.",
+          "auth/too-many-requests": "Too many tries. Wait a few minutes, or use Forgot password."
+        };
+        showMessage(known[error.code] || error.message, false);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

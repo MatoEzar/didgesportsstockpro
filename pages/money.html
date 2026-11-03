@@ -1,0 +1,786 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money & Reports | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .tab { padding:10px 16px; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer; font-size:14px; }
+    .tab.active { background:#1e3c72; color:white; border-color:#1e3c72; }
+    .report { background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.05); padding:28px; overflow-x:auto; }
+    .report-head { text-align:center; margin-bottom:22px; }
+    .report-head h2 { color:#1e3c72; font-size:22px; }
+    .report-head p { color:#666; font-size:14px; margin-top:4px; }
+    .report h3 { color:#1e3c72; margin:24px 0 8px; font-size:16px; }
+    .report table { width:100%; border-collapse:collapse; margin-bottom:6px; }
+    .report th { background:#f8f9fc; text-align:left; padding:10px 12px; font-size:13px; color:#555; border-bottom:2px solid #e3e6ee; }
+    .report td { padding:9px 12px; border-bottom:1px solid #f0f0f0; font-size:14px; }
+    .report .num { text-align:right; }
+    .report tr.bold td { font-weight:700; background:#f8f9fc; border-top:1px solid #cfd5e3; }
+    .report tr.big td { font-weight:700; font-size:16px; background:#eef2fb; color:#1e3c72; border-top:2px solid #1e3c72; }
+    .report tr.indent td:first-child { padding-left:28px; }
+    .neg { color:#c0392b; }
+    .note { color:#888; font-size:12px; margin-top:12px; }
+
+    @media print {
+      .sidebar, .topbar, .toolbar, .tabs, #netBanner { display:none !important; }
+      .main-content { margin-left:0 !important; }
+      .page-content { padding:0 !important; }
+      .report { box-shadow:none; padding:0; }
+      body { background:white; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item active"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Money & Reports</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info">
+        <span id="userEmail">Loading...</span>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="tabs" id="tabs"></div>
+
+      <div class="actions-bar toolbar">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <select id="rangeSelect" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px;">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">This week</option>
+            <option value="month" selected>This month</option>
+            <option value="lastmonth">Last month</option>
+            <option value="year">This year</option>
+            <option value="custom">Choose dates</option>
+          </select>
+          <span id="customDates" style="display:none; gap:8px; align-items:center;">
+            <input type="date" id="fromDate" style="padding:9px 10px; border:1px solid #ddd; border-radius:8px;">
+            <input type="date" id="toDate" style="padding:9px 10px; border:1px solid #ddd; border-radius:8px;">
+          </span>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-secondary" id="csvBtn">Export Excel (CSV)</button>
+          <button class="btn-primary" id="printBtn" style="width:auto; padding:10px 18px; font-size:14px;">Print / Save PDF</button>
+        </div>
+      </div>
+
+      <div class="report" id="report"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    await guard("money");
+
+    const $ = (id) => document.getElementById(id);
+
+    $("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+
+    $("menuToggle").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+
+    const money = (n) => "KES " + Math.round(Number(n || 0)).toLocaleString();
+    const rowsOf = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const dateOf = (ts) => (ts && ts.toDate ? ts.toDate() : null);
+    const dayKey = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+
+    let D = {};
+    let current = "pl";
+    let lastReport = null;
+
+    async function load() {
+      const names = [
+        "sales", "expenses", "accounts", "supplier_payments",
+        "purchases", "supplier_credits", "transfers",
+        "cash_adjustments", "suppliers", "products",
+        "customers"
+      ];
+
+      const snaps = await Promise.all(
+        names.map((n) => getDocs(collection(db, n)))
+      );
+
+      names.forEach((n, i) => {
+        D[n] = rowsOf(snaps[i]);
+      });
+
+      render();
+    }
+
+    function getRange() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+      const mode = $("rangeSelect").value;
+      let start = today, end = endOf(today);
+
+      if (mode === "yesterday") {
+        start = new Date(today.getTime() - 86400000);
+        end = endOf(start);
+      }
+      else if (mode === "week") {
+        start = new Date(today.getTime() - ((today.getDay() + 6) % 7) * 86400000);
+      }
+      else if (mode === "month") {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      else if (mode === "lastmonth") {
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = endOf(new Date(now.getFullYear(), now.getMonth(), 0));
+      }
+      else if (mode === "year") {
+        start = new Date(now.getFullYear(), 0, 1);
+      }
+      else if (mode === "custom") {
+        if ($("fromDate").value) start = new Date($("fromDate").value + "T00:00:00");
+        if ($("toDate").value) end = new Date($("toDate").value + "T23:59:59");
+      }
+
+      return { start, end };
+    }
+
+    // ---------- helpers ----------
+    const productMap = () => new Map(D.products.map((p) => [p.id, p]));
+
+    function costOf(sale, pm) {
+      const p = pm.get(sale.productId);
+      if (!p) return 0;
+
+      if (p.hasVariants && p.variants) {
+        const v = p.variants.find((x) => x.size === sale.variant);
+        return (v ? Number(v.cost || 0) : 0) * Number(sale.quantity || 0);
+      }
+
+      return Number(p.cost || 0) * Number(sale.quantity || 0);
+    }
+
+    function lines(a) {
+      const n = a.name, out = [];
+
+      D.sales.forEach((s) => {
+        if (s.paymentMethod === n)
+          out.push({ d: dateOf(s.createdAt), inn: Number(s.total || 0), out: 0 });
+      });
+
+      D.supplier_payments.forEach((p) => {
+        if (p.method === n)
+          out.push({ d: dateOf(p.createdAt), inn: 0, out: Number(p.amount || 0) });
+      });
+
+      D.expenses.forEach((e) => {
+        if (e.accountName === n)
+          out.push({ d: dateOf(e.createdAt), inn: 0, out: Number(e.amount || 0) });
+      });
+
+      D.transfers.forEach((t) => {
+        if (t.toName === n)
+          out.push({ d: dateOf(t.createdAt), inn: Number(t.amount || 0), out: 0 });
+
+        if (t.fromName === n)
+          out.push({ d: dateOf(t.createdAt), inn: 0, out: Number(t.amount || 0) });
+      });
+
+      D.cash_adjustments.forEach((j) => {
+        if (j.accountName !== n) return;
+        const amt = Number(j.amount || 0);
+        out.push({
+          d: dateOf(j.createdAt),
+          inn: j.direction === "in" ? amt : 0,
+          out: j.direction === "out" ? amt : 0
+        });
+      });
+
+      return out;
+    }
+
+    function supplierPos(s) {
+      const received = D.purchases
+        .filter((p) => p.supplierId === s.id)
+        .reduce((n, p) => n + Number(p.total || 0), 0);
+
+      const paid = D.supplier_payments
+        .filter((p) => p.supplierId === s.id)
+        .reduce((n, p) => n + Number(p.amount || 0), 0);
+
+      const cr = D.supplier_credits.filter((c) => c.supplierId === s.id);
+
+      const cashCredit = cr
+        .filter((c) => c.kind === "cash")
+        .reduce((n, c) => n + Number(c.amount || 0), 0);
+
+      const goods = cr.filter((c) => c.kind === "goods");
+
+      return {
+        received, paid, cashCredit, goods,
+        net: received - paid - cashCredit
+      };
+    }
+
+    // ---------- customer receivables ----------
+    // Uses the outstandingBalance stored in each customer record.
+    // Positive values mean the customer owes the business.
+    function customerPos(c) {
+      return Math.max(0, Number(c.outstandingBalance || 0));
+    }
+
+    function customerTotal() {
+      return D.customers.reduce((total, c) => total + customerPos(c), 0);
+    }
+
+    const R = (cells, cls) => ({ cells, cls: cls || "" });
+    const sortDesc = (arr, f) => arr.slice().sort((a, b) => f(b) - f(a));
+
+    // ---------- reports ----------
+    const REPORTS = {
+      pl: {
+        label: "Profit & Loss",
+        build(start, end) {
+          const pm = productMap();
+          const inR = (ts) => {
+            const d = dateOf(ts);
+            return d && d >= start && d <= end;
+          };
+
+          const rev = new Map();
+          let cogs = 0, revenue = 0;
+
+          D.sales.filter((s) => inR(s.createdAt)).forEach((s) => {
+            const p = pm.get(s.productId);
+            const cat = p && p.category ? p.category : "Other";
+
+            rev.set(cat, (rev.get(cat) || 0) + Number(s.total || 0));
+            revenue += Number(s.total || 0);
+            cogs += costOf(s, pm);
+          });
+
+          const exp = new Map();
+          let expenses = 0;
+
+          D.expenses.filter((e) => inR(e.createdAt)).forEach((e) => {
+            exp.set(e.category || "Other",
+              (exp.get(e.category || "Other") || 0) + Number(e.amount || 0));
+            expenses += Number(e.amount || 0);
+          });
+
+          const gross = revenue - cogs;
+          const net = gross - expenses;
+          const rows = [R(["Income"], "bold")];
+
+          sortDesc([...rev], (x) => x[1])
+            .forEach(([k, v]) => rows.push(R([k, v], "indent")));
+
+          rows.push(
+            R(["Total income", revenue], "bold"),
+            R(["Cost of goods sold", cogs]),
+            R(["Gross profit", gross], "bold")
+          );
+
+          rows.push(R(["Expenses"], "bold"));
+
+          sortDesc([...exp], (x) => x[1])
+            .forEach(([k, v]) => rows.push(R([k, v], "indent")));
+
+          rows.push(
+            R(["Total expenses", expenses], "bold"),
+            R(["Net profit", net], "big")
+          );
+
+          return {
+            title: "Profit & Loss",
+            sections: [{ head: ["", "Amount"], rows }],
+            note: "Cost of goods sold uses each product's current cost price."
+          };
+        }
+      },
+
+      daily: {
+        label: "Daily Sales",
+        build(start, end) {
+          const days = new Map();
+
+          D.sales.forEach((s) => {
+            const d = dateOf(s.createdAt);
+            if (!d || d < start || d > end) return;
+
+            const k = dayKey(d);
+            if (!days.has(k))
+              days.set(k, { d, n: 0, Cash: 0, Till: 0, Bank: 0, Mixed: 0, total: 0 });
+
+            const x = days.get(k);
+            const t = Number(s.total || 0);
+            x.n++;
+            x.total += t;
+
+            if (x[s.paymentMethod] !== undefined)
+              x[s.paymentMethod] += t;
+          });
+
+          const list = [...days.values()].sort((a, b) => b.d - a.d);
+          const sum = (f) => list.reduce((n, x) => n + x[f], 0);
+
+          const rows = list.map((x) => R([
+            x.d.toLocaleDateString(), String(x.n),
+            x.Cash, x.Till, x.Bank, x.Mixed, x.total
+          ]));
+
+          rows.push(R([
+            "Total", String(sum("n")), sum("Cash"),
+            sum("Till"), sum("Bank"), sum("Mixed"), sum("total")
+          ], "big"));
+
+          return {
+            title: "Daily Sales",
+            sections: [{
+              head: ["Date", "Sales", "Cash", "Till", "Bank", "Mixed", "Total"],
+              rows
+            }]
+          };
+        }
+      },
+
+      product: {
+        label: "Sales by Product",
+        build(start, end) {
+          const pm = productMap(), map = new Map();
+
+          D.sales.forEach((s) => {
+            const d = dateOf(s.createdAt);
+            if (!d || d < start || d > end) return;
+
+            const k = s.productName + (s.variant ? " (" + s.variant + ")" : "");
+            if (!map.has(k)) map.set(k, { qty: 0, rev: 0, cost: 0 });
+
+            const x = map.get(k);
+            x.qty += Number(s.quantity || 0);
+            x.rev += Number(s.total || 0);
+            x.cost += costOf(s, pm);
+          });
+
+          const list = sortDesc([...map], (e) => e[1].rev);
+          const pct = (r, c) => r ? Math.round(((r - c) / r) * 100) + "%" : "-";
+
+          const rows = list.map(([k, x]) => R([
+            k, String(x.qty), x.rev, x.cost,
+            x.rev - x.cost, pct(x.rev, x.cost)
+          ]));
+
+          const t = list.reduce((a, [, x]) => ({
+            q: a.q + x.qty,
+            r: a.r + x.rev,
+            c: a.c + x.cost
+          }), { q: 0, r: 0, c: 0 });
+
+          rows.push(R([
+            "Total", String(t.q), t.r, t.c,
+            t.r - t.c, pct(t.r, t.c)
+          ], "big"));
+
+          return {
+            title: "Sales by Product",
+            sections: [{
+              head: ["Product", "Qty", "Sales", "Cost", "Profit", "Margin"],
+              rows
+            }]
+          };
+        }
+      },
+
+      expenses: {
+        label: "Expenses",
+        build(start, end) {
+          const list = D.expenses.filter((e) => {
+            const d = dateOf(e.createdAt);
+            return d && d >= start && d <= end;
+          });
+
+          const total = list.reduce((n, e) => n + Number(e.amount || 0), 0);
+          const cats = new Map();
+
+          list.forEach((e) => cats.set(
+            e.category || "Other",
+            (cats.get(e.category || "Other") || 0) + Number(e.amount || 0)
+          ));
+
+          const catRows = sortDesc([...cats], (x) => x[1])
+            .map(([k, v]) => R([
+              k, v, total ? Math.round((v / total) * 100) + "%" : "-"
+            ]));
+
+          catRows.push(R(["Total", total, ""], "big"));
+
+          const detail = list
+            .sort((a, b) => dateOf(b.createdAt) - dateOf(a.createdAt))
+            .map((e) => R([
+              dateOf(e.createdAt).toLocaleDateString(),
+              e.category || "Other", e.note || "-",
+              e.accountName || "-", Number(e.amount || 0)
+            ]));
+
+          return {
+            title: "Expenses",
+            sections: [
+              { heading: "By category", head: ["Category", "Amount", "Share"], rows: catRows },
+              { heading: "Every expense", head: ["Date", "Category", "Note", "Paid from", "Amount"], rows: detail }
+            ]
+          };
+        }
+      },
+
+      cash: {
+        label: "Cash & Bank",
+        build(start, end) {
+          const rows = [];
+          let tO = 0, tI = 0, tOut = 0, tC = 0;
+
+          D.accounts.slice()
+            .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+            .forEach((a) => {
+              let open = Number(a.openingBalance || 0), inn = 0, out = 0;
+
+              lines(a).forEach((l) => {
+                if (!l.d) return;
+                if (l.d < start) open += l.inn - l.out;
+                else if (l.d <= end) {
+                  inn += l.inn;
+                  out += l.out;
+                }
+              });
+
+              const close = open + inn - out;
+              tO += open;
+              tI += inn;
+              tOut += out;
+              tC += close;
+              rows.push(R([a.name, open, inn, out, close]));
+            });
+
+          rows.push(R(["Total", tO, tI, tOut, tC], "big"));
+
+          const mixed = D.sales
+            .filter((s) => s.paymentMethod === "Mixed")
+            .reduce((n, s) => n + Number(s.total || 0), 0);
+
+          return {
+            title: "Cash & Bank Summary",
+            sections: [{
+              head: ["Account", "Opening", "Money in", "Money out", "Closing"],
+              rows
+            }],
+            note: mixed ? "Mixed sales of " + money(mixed) + " are not inside any account." : ""
+          };
+        }
+      },
+
+      suppliers: {
+        label: "Bills & Trade Credits",
+        build() {
+          let owe = 0, owed = 0;
+
+          const rows = D.suppliers.slice()
+            .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+            .map((s) => {
+              const p = supplierPos(s);
+              if (p.net > 0) owe += p.net;
+              if (p.net < 0) owed += -p.net;
+
+              return R([
+                s.name, p.received, p.paid, p.cashCredit,
+                p.net > 0.5 ? "We owe " + money(p.net)
+                  : p.net < -0.5 ? "They owe " + money(-p.net)
+                    : p.goods.length ? "Goods owed" : "Settled"
+              ]);
+            });
+
+          const goods = D.supplier_credits
+            .filter((c) => c.kind === "goods")
+            .map((c) => R([
+              c.supplierName || "-", c.itemName || "-",
+              String(c.quantity || 0), Number(c.amount || 0)
+            ]));
+
+          // NEW: customer credit balances
+          const customerRows = D.customers.slice()
+            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
+            .map((c) => R([
+              c.name || c.customerName || "Unnamed customer",
+              customerPos(c),
+              customerPos(c) > 0 ? "Customer owes us" : "Settled"
+            ]));
+
+          const customersOwe = customerTotal();
+
+          const sections = [
+            {
+              heading: "Totals",
+              head: ["", "Amount"],
+              rows: [
+                R(["Bills we owe suppliers (payable)", owe]),
+                R(["Suppliers owe us in cash (receivable)", owed]),
+                R(["Customers owe us (receivable)", customersOwe]),
+                R(["Net receivables minus payables", owed + customersOwe - owe], "big")
+              ]
+            },
+            {
+              heading: "By supplier",
+              head: ["Supplier", "Goods received", "Cash paid", "Credits to us", "Position"],
+              rows
+            },
+            {
+              heading: "By customer",
+              head: ["Customer", "Outstanding balance", "Position"],
+              rows: customerRows
+            },
+            {
+              heading: "Customer credit summary",
+              head: ["", "Amount"],
+              rows: [
+                R(["Total customers owe us", customersOwe], "big")
+              ]
+            }
+          ];
+
+          if (goods.length) {
+            sections.push({
+              heading: "Goods suppliers still owe us",
+              head: ["Supplier", "Item", "Qty", "Value"],
+              rows: goods
+            });
+          }
+
+          return {
+            title: "Bills & Trade Credits",
+            asAt: true,
+            sections
+          };
+        }
+      },
+
+      balance: {
+        label: "Balance Sheet",
+        build() {
+          const accRows = [];
+          let cash = 0;
+
+          D.accounts.slice()
+            .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+            .forEach((a) => {
+              const bal = Number(a.openingBalance || 0) +
+                lines(a).reduce((n, l) => n + l.inn - l.out, 0);
+
+              cash += bal;
+              accRows.push(R([a.name, bal], "indent"));
+            });
+
+          const stock = D.products.reduce((n, p) => n +
+            (p.hasVariants && p.variants
+              ? p.variants.reduce((m, v) =>
+                  m + Number(v.stock || 0) * Number(v.cost || 0), 0)
+              : Number(p.stock || 0) * Number(p.cost || 0)), 0);
+
+          let owe = 0, owed = 0;
+
+          D.suppliers.forEach((s) => {
+            const p = supplierPos(s);
+            if (p.net > 0) owe += p.net;
+            if (p.net < 0) owed += -p.net;
+          });
+
+          // NEW: customer receivables
+          const customersOwe = customerTotal();
+
+          // Customer debts increase total assets.
+          const assets = cash + stock + owed + customersOwe;
+          const equity = assets - owe;
+
+          const rows = [
+            R(["Assets"], "bold"),
+            R(["Cash and bank"], "bold"),
+            ...accRows,
+            R(["Total cash and bank", cash], "bold"),
+            R(["Stock on hand (at cost)", stock], "indent"),
+            R(["Owed to us by suppliers", owed], "indent"),
+
+            // NEW: Customers owe us
+            R(["Customers owe us (accounts receivable)", customersOwe], "indent"),
+
+            R(["Total assets", assets], "big"),
+            R(["Liabilities"], "bold"),
+            R(["Owed to suppliers", owe], "indent"),
+            R(["Total liabilities", owe], "big"),
+            R(["Owner's equity (assets minus liabilities)", equity], "big")
+          ];
+
+          return {
+            title: "Balance Sheet",
+            asAt: true,
+            sections: [{ head: ["", "Amount"], rows }],
+            note: "Mixed sales not yet placed in an account are left out of cash. Customer receivables use the outstanding balances recorded in Firebase."
+          };
+        }
+      }
+    };
+
+    // ---------- rendering ----------
+    const fmtCell = (c) => typeof c === "number" ? money(c) : c;
+
+    // Escape Firestore text before inserting it into HTML.
+    const escapeHtml = (value) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+    function render() {
+      const { start, end } = getRange();
+
+      $("customDates").style.display =
+        $("rangeSelect").value === "custom" ? "flex" : "none";
+
+      $("tabs").innerHTML = Object.entries(REPORTS)
+        .map(([k, r]) =>
+          `<button class="tab ${k === current ? "active" : ""}" data-k="${k}">${escapeHtml(r.label)}</button>`
+        ).join("");
+
+      $("tabs").querySelectorAll(".tab").forEach((b) =>
+        b.addEventListener("click", () => {
+          current = b.dataset.k;
+          render();
+        })
+      );
+
+      const rep = REPORTS[current].build(start, end);
+      lastReport = { rep, start, end };
+
+      const period = rep.asAt
+        ? "As at " + new Date().toLocaleDateString()
+        : start.toLocaleDateString() + " to " + end.toLocaleDateString();
+
+      let html = `<div class="report-head">
+        <h2>Didge Sports</h2>
+        <h2 style="font-size:18px;">${escapeHtml(rep.title)}</h2>
+        <p>${escapeHtml(period)}</p>
+      </div>`;
+
+      rep.sections.forEach((sec) => {
+        if (sec.heading) html += `<h3>${escapeHtml(sec.heading)}</h3>`;
+
+        html += `<table><thead><tr>${
+          sec.head.map((h, i) =>
+            `<th class="${i > 0 ? "num" : ""}">${escapeHtml(h)}</th>`
+          ).join("")
+        }</tr></thead><tbody>`;
+
+        if (!sec.rows.length) {
+          html += `<tr><td colspan="${sec.head.length}" style="color:#888; text-align:center; padding:24px;">Nothing here yet.</td></tr>`;
+        }
+
+        sec.rows.forEach((r) => {
+          html += `<tr class="${r.cls}">` +
+            r.cells.map((c, i) => {
+              const neg = typeof c === "number" && c < 0 ? " neg" : "";
+              return `<td class="${i > 0 ? "num" : ""}${neg}">${escapeHtml(fmtCell(c))}</td>`;
+            }).join("") + `</tr>`;
+        });
+
+        html += `</tbody></table>`;
+      });
+
+      if (rep.note) html += `<p class="note">${escapeHtml(rep.note)}</p>`;
+
+      html += `<p class="note">Generated ${new Date().toLocaleString()}</p>`;
+      $("report").innerHTML = html;
+    }
+
+    function exportCsv() {
+      const { rep, start, end } = lastReport;
+      const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+
+      const out = [
+        ["Didge Sports"],
+        [rep.title],
+        [rep.asAt
+          ? "As at " + new Date().toLocaleDateString()
+          : start.toLocaleDateString() + " to " + end.toLocaleDateString()],
+        []
+      ];
+
+      rep.sections.forEach((sec) => {
+        if (sec.heading) out.push([sec.heading]);
+        out.push(sec.head);
+        sec.rows.forEach((r) =>
+          out.push(r.cells.map((c) =>
+            typeof c === "number" ? Math.round(c) : c
+          ))
+        );
+        out.push([]);
+      });
+
+      const blob = new Blob(
+        ["\ufeff" + out.map((r) => r.map(q).join(",")).join("\n")],
+        { type: "text/csv" }
+      );
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = rep.title.replace(/[^\w]+/g, "-").toLowerCase() +
+        "-" + dayKey(new Date()) + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    ["rangeSelect", "fromDate", "toDate"].forEach((id) =>
+      $(id).addEventListener("change", render)
+    );
+
+    $("printBtn").addEventListener("click", () => window.print());
+    $("csvBtn").addEventListener("click", exportCsv);
+
+    try {
+      await load();
+    } catch (error) {
+      console.error("Failed to load Money & Reports:", error);
+      $("report").textContent =
+        "Unable to load reports. Check your Firebase connection and Firestore permissions.";
+    }
+  </script>
+</body>
+</html>

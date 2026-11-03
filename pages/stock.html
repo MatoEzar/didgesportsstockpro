@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item active"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Stock Management</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info">
+        <span id="userEmail">Loading...</span>
+      </div>
+    </header>
+
+    <section class="page-content">
+
+      <div class="actions-bar">
+        <div class="stock-actions">
+          <button class="btn-primary" id="stockInBtn" data-roles="admin,inventory">+ Stock In</button>
+          <button class="btn-secondary" id="stockOutBtn" data-roles="admin,inventory">− Stock Out</button>
+          <button class="btn-secondary" id="adjustBtn" data-roles="admin,inventory">± Adjust Stock</button>
+          <button class="btn-primary" id="contractBtn" data-roles="admin">📝 New Contract</button>
+        </div>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search movements...">
+        </div>
+      </div>
+
+      <div class="table-card" style="margin-bottom: 25px;">
+        <h3 style="padding: 15px 20px 10px; color: #1e3c72;">Current Stock Levels</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Variant / Size</th>
+              <th>Current Stock</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="currentStockBody"></tbody>
+        </table>
+      </div>
+
+      <div class="table-card" style="margin-bottom: 25px;" data-roles="admin">
+        <h3 style="padding: 15px 20px 10px; color: #1e3c72;">Value Carried by Sales Agents</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>Sales Agent</th><th>Active Contracts</th><th>Total Value Carried</th></tr>
+          </thead>
+          <tbody id="agentSummaryBody"></tbody>
+        </table>
+        <p id="noAgents" class="empty-state" style="display:none;">No active contracts.</p>
+      </div>
+
+      <div class="table-card" style="margin-bottom: 25px;" data-roles="admin">
+        <h3 style="padding: 15px 20px 10px; color: #1e3c72;">Sales Agent Contracts</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th><th>Sales Agent</th><th>Products</th>
+              <th>Total Qty</th><th>Total Value</th><th>Approved By</th>
+              <th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="contractsBody"></tbody>
+        </table>
+        <p id="noContracts" class="empty-state" style="display:none;">No contracts yet.</p>
+      </div>
+
+      <div class="table-card">
+        <h3 style="padding: 15px 20px 10px; color: #1e3c72;">Stock Movement History</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Product</th>
+              <th>Variant</th>
+              <th>Quantity</th>
+              <th>Reason / Note</th>
+              <th>By</th>
+            </tr>
+          </thead>
+          <tbody id="movementsBody"></tbody>
+        </table>
+        <p id="noMovements" class="empty-state" style="display:none;">No stock movements yet.</p>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Stock In: multi product + supplier -->
+  <div class="modal" id="stockInModal">
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <h2>Stock In from Supplier</h2>
+        <button class="close-btn" id="closeStockIn">&times;</button>
+      </div>
+
+      <form id="stockInForm">
+        <div class="form-group">
+          <label>Supplier *</label>
+          <select id="supplierSelect" required>
+            <option value="">Select Supplier</option>
+          </select>
+        </div>
+
+        <h3 style="margin:15px 0 8px; color:#1e3c72;">Products received</h3>
+        <div id="inItems"></div>
+        <button type="button" class="btn-secondary" id="addInLineBtn" style="margin-bottom:15px;">+ Add Another Product</button>
+
+        <div class="form-group">
+          <label>Total cost (KES)</label>
+          <input type="text" id="inTotal" readonly style="background:#f5f5f5; font-weight:600;">
+        </div>
+
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="inNote" placeholder="e.g. Invoice 4521, delivery note">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelStockIn">Cancel</button>
+          <button type="submit" class="btn-primary">Save Stock In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stock Out / Adjust: single product -->
+  <div class="modal" id="stockModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Stock Out</h2>
+        <button class="close-btn" id="closeModal">&times;</button>
+      </div>
+
+      <form id="stockForm">
+        <div class="form-group">
+          <label>Product *</label>
+          <select id="productSelect" required>
+            <option value="">Select Product</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="variantGroup" style="display:none;">
+          <label>Size / Variant *</label>
+          <select id="variantSelect">
+            <option value="">Select Size</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input type="number" id="quantity" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label>Reason / Note</label>
+          <input type="text" id="reason" placeholder="e.g. Damaged, count correction">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="contractModal">
+    <div class="modal-content" style="max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <h2>New Sales Agent Contract</h2>
+        <button class="close-btn" id="closeContract">&times;</button>
+      </div>
+
+      <form id="contractForm">
+        <div class="form-group">
+          <label>Sales Agent Name *</label>
+          <input type="text" id="cAgent" required>
+        </div>
+        <div class="form-group">
+          <label>Agent Phone</label>
+          <input type="text" id="cPhone">
+        </div>
+
+        <h3 style="margin:15px 0 8px; color:#1e3c72;">Products</h3>
+        <div id="cItems"></div>
+        <button type="button" class="btn-secondary" id="addLineBtn" style="margin-bottom:15px;">+ Add Another Product</button>
+
+        <div class="form-group">
+          <label>Grand Total Value (KES)</label>
+          <input type="text" id="cTotal" readonly>
+        </div>
+        <div class="form-group">
+          <label>Date & Time *</label>
+          <input type="datetime-local" id="cDate" required>
+        </div>
+        <div class="form-group">
+          <label>Approved By *</label>
+          <input type="text" id="cApproved" required>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="cNote" placeholder="Optional">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelContract">Cancel</button>
+          <button type="submit" class="btn-primary">Save Contract</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from '../js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, doc, updateDoc, writeBatch,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    let currentUser = null;
+    let allProducts = [];
+    let allSuppliers = [];
+    let movementType = "out";
+
+    const session = await guard("stock");
+    currentUser = session.user;
+
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    async function loadProductsForSelect() {
+      const snapshot = await getDocs(query(collection(db, "products"), orderBy("name")));
+      allProducts = [];
+      const select = document.getElementById('productSelect');
+      select.innerHTML = `<option value="">Select Product</option>`;
+      snapshot.forEach(docSnap => {
+        const data = { id: docSnap.id, ...docSnap.data() };
+        allProducts.push(data);
+        select.innerHTML += `<option value="${data.id}">${esc(data.name)}</option>`;
+      });
+    }
+
+    async function loadSuppliers() {
+      allSuppliers = [];
+      const select = document.getElementById('supplierSelect');
+      select.innerHTML = `<option value="">Select Supplier</option>`;
+      try {
+        const snap = await getDocs(query(collection(db, "suppliers"), orderBy("name")));
+        snap.forEach(d => {
+          const s = { id: d.id, ...d.data() };
+          allSuppliers.push(s);
+          select.innerHTML += `<option value="${s.id}">${esc(s.name)}</option>`;
+        });
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    const stockInModal = document.getElementById('stockInModal');
+    const inItems = document.getElementById('inItems');
+    const inTotal = document.getElementById('inTotal');
+
+    function closeStockIn() {
+      stockInModal.style.display = "none";
+    }
+    document.getElementById('closeStockIn').addEventListener('click', closeStockIn);
+    document.getElementById('cancelStockIn').addEventListener('click', closeStockIn);
+
+    function addInLine() {
+      const div = document.createElement('div');
+      div.className = "in-line";
+      div.style.cssText = "border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:10px;";
+      div.innerHTML = `
+        <div class="form-group">
+          <label>Product *</label>
+          <select class="in-product" required>
+            <option value="">Select Product</option>
+            ${allProducts.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group in-variant-group" style="display:none;">
+          <label>Size / Variant *</label>
+          <select class="in-variant"><option value="">Select Size</option></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity *</label>
+            <input type="number" class="in-qty" min="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label>Unit cost (KES) *</label>
+            <input type="number" class="in-cost" min="0" step="0.01" required>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Line cost: KES <span class="in-line-total">0</span></strong>
+          <button type="button" class="btn-secondary in-remove">Remove</button>
+        </div>`;
+      inItems.appendChild(div);
+    }
+
+    function updateInTotals() {
+      let grand = 0;
+      inItems.querySelectorAll('.in-line').forEach(line => {
+        const t = (Number(line.querySelector('.in-qty').value) || 0) *
+                  (Number(line.querySelector('.in-cost').value) || 0);
+        line.querySelector('.in-line-total').textContent = t.toLocaleString();
+        grand += t;
+      });
+      inTotal.value = grand ? "KES " + grand.toLocaleString() : "";
+    }
+
+    function suggestCost(line) {
+      const p = allProducts.find(x => x.id === line.querySelector('.in-product').value);
+      const costInput = line.querySelector('.in-cost');
+      if (!p) return;
+      if (p.hasVariants && p.variants) {
+        const v = p.variants[Number(line.querySelector('.in-variant').value)];
+        costInput.value = v && v.cost != null ? Number(v.cost) : "";
+      } else {
+        costInput.value = p.cost != null ? Number(p.cost) : "";
+      }
+      updateInTotals();
+    }
+
+    inItems.addEventListener('change', (e) => {
+      const line = e.target.closest('.in-line');
+      if (!line) return;
+
+      if (e.target.classList.contains('in-product')) {
+        const p = allProducts.find(x => x.id === e.target.value);
+        const vGroup = line.querySelector('.in-variant-group');
+        const vSelect = line.querySelector('.in-variant');
+        if (p && p.hasVariants && p.variants) {
+          vGroup.style.display = "block";
+          vSelect.required = true;
+          vSelect.innerHTML = `<option value="">Select Size</option>`;
+          p.variants.forEach((v, i) => {
+            vSelect.innerHTML += `<option value="${i}">${esc(v.size)} (Stock: ${v.stock})</option>`;
+          });
+          line.querySelector('.in-cost').value = "";
+          updateInTotals();
+        } else {
+          vGroup.style.display = "none";
+          vSelect.required = false;
+          suggestCost(line);
+        }
+      }
+
+      if (e.target.classList.contains('in-variant')) suggestCost(line);
+    });
+
+    inItems.addEventListener('input', (e) => {
+      if (e.target.classList.contains('in-qty') || e.target.classList.contains('in-cost')) updateInTotals();
+    });
+
+    inItems.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('in-remove')) return;
+      if (inItems.children.length <= 1) return alert("Add at least one product");
+      e.target.closest('.in-line').remove();
+      updateInTotals();
+    });
+
+    document.getElementById('addInLineBtn').addEventListener('click', addInLine);
+
+    const stockInBtn = document.getElementById('stockInBtn');
+    if (stockInBtn) {
+      stockInBtn.addEventListener('click', async () => {
+        await loadProductsForSelect();
+        await loadSuppliers();
+        if (!allSuppliers.length) {
+          return alert("Add a supplier on the Suppliers page first.");
+        }
+        document.getElementById('stockInForm').reset();
+        inItems.innerHTML = "";
+        addInLine();
+        inTotal.value = "";
+        stockInModal.style.display = "flex";
+      });
+    }
+
+    document.getElementById('stockInForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const supplierId = document.getElementById('supplierSelect').value;
+      const supplier = allSuppliers.find(s => s.id === supplierId);
+      if (!supplier) return alert("Select a supplier");
+
+      const note = document.getElementById('inNote').value.trim();
+      const work = {};
+      const lines = [];
+
+      for (const row of inItems.querySelectorAll('.in-line')) {
+        const product = allProducts.find(p => p.id === row.querySelector('.in-product').value);
+        if (!product) return alert("Select a product on every line");
+
+        const qty = Number(row.querySelector('.in-qty').value);
+        const unitCost = Number(row.querySelector('.in-cost').value);
+        if (!(qty > 0) || isNaN(unitCost) || unitCost < 0) {
+          return alert("Check quantity and cost on every line");
+        }
+
+        if (!work[product.id]) work[product.id] = JSON.parse(JSON.stringify(product));
+        const wp = work[product.id];
+
+        let variantName = null;
+        if (wp.hasVariants) {
+          const idx = Number(row.querySelector('.in-variant').value);
+          if (!wp.variants[idx]) return alert("Select a size for " + product.name);
+          wp.variants[idx].stock = (Number(wp.variants[idx].stock) || 0) + qty;
+          wp.variants[idx].cost = unitCost;
+          variantName = wp.variants[idx].size;
+        } else {
+          wp.stock = (Number(wp.stock) || 0) + qty;
+          wp.cost = unitCost;
+        }
+
+        lines.push({
+          productId: product.id,
+          productName: product.name,
+          variant: variantName,
+          quantity: qty,
+          unitCost,
+          amount: qty * unitCost
+        });
+      }
+
+      if (!lines.length) return alert("Add at least one product");
+
+      const totalAmount = lines.reduce((s, l) => s + l.amount, 0);
+      const reasonText = "From " + supplier.name + (note ? " — " + note : "");
+
+      try {
+        const batch = writeBatch(db);
+
+        Object.values(work).forEach(wp => {
+          if (wp.hasVariants) {
+            const totalStock = wp.variants.reduce((s, v) => s + (Number(v.stock) || 0), 0);
+            batch.update(doc(db, "products", wp.id), {
+              variants: wp.variants,
+              totalStock,
+              updatedAt: serverTimestamp()
+            });
+          } else {
+            batch.update(doc(db, "products", wp.id), {
+              stock: wp.stock,
+              totalStock: wp.stock,
+              cost: wp.cost,
+              updatedAt: serverTimestamp()
+            });
+          }
+        });
+
+        lines.forEach(line => {
+          batch.set(doc(collection(db, "stock_movements")), {
+            type: "in",
+            productId: line.productId,
+            productName: line.productName,
+            variant: line.variant,
+            quantity: line.quantity,
+            unitCost: line.unitCost,
+            amount: line.amount,
+            supplierId: supplier.id,
+            supplierName: supplier.name,
+            reason: reasonText,
+            userEmail: currentUser.email,
+            createdAt: serverTimestamp()
+          });
+
+          batch.set(doc(collection(db, "purchases")), {
+            supplierId: supplier.id,
+            supplierName: supplier.name,
+            productId: line.productId,
+            productName: line.productName,
+            variant: line.variant,
+            quantity: line.quantity,
+            unitCost: line.unitCost,
+            amount: line.amount,
+            note: note || null,
+            userEmail: currentUser.email,
+            createdAt: serverTimestamp()
+          });
+        });
+
+        await batch.commit();
+
+        closeStockIn();
+        loadCurrentStock();
+        loadMovements();
+        loadProductsForSelect();
+        alert("Stock received. Supplier " + supplier.name + " is owed KES " + totalAmount.toLocaleString() + " for this receipt.");
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    });
+
+    const modal = document.getElementById('stockModal');
+    document.getElementById('closeModal').addEventListener('click', () => modal.style.display = "none");
+    document.getElementById('cancelBtn').addEventListener('click', () => modal.style.display = "none");
+
+    const stockOutBtn = document.getElementById('stockOutBtn');
+    const adjustBtn = document.getElementById('adjustBtn');
+    if (stockOutBtn) stockOutBtn.addEventListener('click', () => openModal("out"));
+    if (adjustBtn) adjustBtn.addEventListener('click', () => openModal("adjust"));
+
+    function openModal(type) {
+      movementType = type;
+      const titles = { out: "Stock Out", adjust: "Adjust Stock" };
+      document.getElementById('modalTitle').textContent = titles[type];
+      document.getElementById('stockForm').reset();
+      document.getElementById('variantGroup').style.display = "none";
+      modal.style.display = "flex";
+    }
+
+    document.getElementById('productSelect').addEventListener('change', (e) => {
+      const product = allProducts.find(p => p.id === e.target.value);
+      const variantGroup = document.getElementById('variantGroup');
+      const variantSelect = document.getElementById('variantSelect');
+      if (product && product.hasVariants && product.variants) {
+        variantGroup.style.display = "block";
+        variantSelect.required = true;
+        variantSelect.innerHTML = `<option value="">Select Size</option>`;
+        product.variants.forEach((v, index) => {
+          variantSelect.innerHTML += `<option value="${index}">${esc(v.size)} (Stock: ${v.stock})</option>`;
+        });
+      } else {
+        variantGroup.style.display = "none";
+        variantSelect.required = false;
+      }
+    });
+
+    document.getElementById('stockForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const productId = document.getElementById('productSelect').value;
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) return alert("Please select a product");
+
+      const qty = Number(document.getElementById('quantity').value);
+      const reason = document.getElementById('reason').value.trim();
+      const variantIndex = document.getElementById('variantSelect').value;
+
+      try {
+        if (product.hasVariants) {
+          const variants = product.variants.map(v => ({ ...v }));
+          const idx = Number(variantIndex);
+          if (!variants[idx]) return alert("Select a size");
+          let newStock = variants[idx].stock;
+          if (movementType === "out") newStock -= qty;
+          else newStock = qty;
+          if (newStock < 0) return alert("Stock cannot go below zero");
+          variants[idx].stock = newStock;
+          const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+          await updateDoc(doc(db, "products", productId), {
+            variants, totalStock, updatedAt: serverTimestamp()
+          });
+        } else {
+          let newStock = product.stock || 0;
+          if (movementType === "out") newStock -= qty;
+          else newStock = qty;
+          if (newStock < 0) return alert("Stock cannot go below zero");
+          await updateDoc(doc(db, "products", productId), {
+            stock: newStock, totalStock: newStock, updatedAt: serverTimestamp()
+          });
+        }
+
+        await addDoc(collection(db, "stock_movements"), {
+          type: movementType,
+          productId,
+          productName: product.name,
+          variant: product.hasVariants ? product.variants[Number(variantIndex)].size : null,
+          quantity: qty,
+          reason: reason || null,
+          userEmail: currentUser.email,
+          createdAt: serverTimestamp()
+        });
+
+        modal.style.display = "none";
+        loadCurrentStock();
+        loadMovements();
+        loadProductsForSelect();
+        alert("Stock updated successfully");
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
+
+    async function loadCurrentStock() {
+      const tbody = document.getElementById('currentStockBody');
+      tbody.innerHTML = "";
+      const snapshot = await getDocs(query(collection(db, "products"), orderBy("name")));
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.hasVariants && data.variants) {
+          data.variants.forEach((v, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${i === 0 ? esc(data.name) : ''}</td>
+              <td>${i === 0 ? esc(data.category) : ''}</td>
+              <td>${esc(v.size)}</td>
+              <td class="${v.stock <= 5 ? 'low-stock' : ''}">${v.stock}</td>
+              <td>${v.stock <= 5 ? '<span class="low-stock">Low</span>' : 'OK'}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${esc(data.name)}</td>
+            <td>${esc(data.category)}</td>
+            <td>-</td>
+            <td class="${(data.stock || 0) <= 5 ? 'low-stock' : ''}">${data.stock || 0}</td>
+            <td>${(data.stock || 0) <= 5 ? '<span class="low-stock">Low</span>' : 'OK'}</td>`;
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    async function loadMovements() {
+      const tbody = document.getElementById('movementsBody');
+      const noMovements = document.getElementById('noMovements');
+      tbody.innerHTML = "";
+      const q = query(collection(db, "stock_movements"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        noMovements.style.display = "block";
+        return;
+      }
+      noMovements.style.display = "none";
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const date = data.createdAt ? data.createdAt.toDate().toLocaleString() : "-";
+        const typeLabel = {
+          in: '<span style="color:green">Stock In</span>',
+          out: '<span style="color:#c0392b">Stock Out</span>',
+          adjust: '<span style="color:#e67e22">Adjustment</span>'
+        };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${typeLabel[data.type] || data.type}</td>
+          <td>${esc(data.productName)}</td>
+          <td>${esc(data.variant || "-")}</td>
+          <td>${data.quantity}</td>
+          <td>${esc(data.reason || "-")}</td>
+          <td>${esc(data.userEmail)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('#movementsBody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+      });
+    });
+
+    const isAdmin = session.profile.role === "admin";
+
+    if (isAdmin) {
+      const cModal = document.getElementById('contractModal');
+      const cItems = document.getElementById('cItems');
+      const cTotal = document.getElementById('cTotal');
+
+      const nowLocal = () => {
+        const d = new Date();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+      };
+
+      const closeContract = () => cModal.style.display = "none";
+      document.getElementById('closeContract').addEventListener('click', closeContract);
+      document.getElementById('cancelContract').addEventListener('click', closeContract);
+
+      function addLine() {
+        const div = document.createElement('div');
+        div.className = "contract-line";
+        div.style.cssText = "border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:10px;";
+        div.innerHTML = `
+          <div class="form-group">
+            <label>Product *</label>
+            <select class="l-product" required>
+              <option value="">Select Product</option>
+              ${allProducts.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="form-group l-variant-group" style="display:none;">
+            <label>Size / Variant *</label>
+            <select class="l-variant"><option value="">Select Size</option></select>
+          </div>
+          <div class="form-group">
+            <label>Quantity *</label>
+            <input type="number" class="l-qty" min="1" required>
+          </div>
+          <div class="form-group">
+            <label>Unit Price (KES) *</label>
+            <input type="number" class="l-price" min="0" step="0.01" required>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>Line total: KES <span class="l-total">0</span></strong>
+            <button type="button" class="btn-secondary l-remove">Remove</button>
+          </div>`;
+        cItems.appendChild(div);
+      }
+
+      function updateTotals() {
+        let grand = 0;
+        cItems.querySelectorAll('.contract-line').forEach(line => {
+          const t = (Number(line.querySelector('.l-qty').value) || 0) *
+                    (Number(line.querySelector('.l-price').value) || 0);
+          line.querySelector('.l-total').textContent = t.toLocaleString();
+          grand += t;
+        });
+        cTotal.value = grand ? grand.toLocaleString() : "";
+      }
+
+      function suggestPrice(line) {
+        const p = allProducts.find(x => x.id === line.querySelector('.l-product').value);
+        const priceInput = line.querySelector('.l-price');
+        if (!p) return;
+        if (p.hasVariants && p.variants) {
+          const v = p.variants[Number(line.querySelector('.l-variant').value)];
+          priceInput.value = v ? (Number(v.selling) || "") : "";
+        } else {
+          priceInput.value = Number(p.selling) || "";
+        }
+        updateTotals();
+      }
+
+      cItems.addEventListener('change', (e) => {
+        const line = e.target.closest('.contract-line');
+        if (!line) return;
+
+        if (e.target.classList.contains('l-product')) {
+          const p = allProducts.find(x => x.id === e.target.value);
+          const vGroup = line.querySelector('.l-variant-group');
+          const vSelect = line.querySelector('.l-variant');
+          if (p && p.hasVariants && p.variants) {
+            vGroup.style.display = "block";
+            vSelect.required = true;
+            vSelect.innerHTML = `<option value="">Select Size</option>`;
+            p.variants.forEach((v, i) => {
+              vSelect.innerHTML += `<option value="${i}">${esc(v.size)} (Stock: ${v.stock})</option>`;
+            });
+            line.querySelector('.l-price').value = "";
+            updateTotals();
+          } else {
+            vGroup.style.display = "none";
+            vSelect.required = false;
+            suggestPrice(line);
+          }
+        }
+
+        if (e.target.classList.contains('l-variant')) suggestPrice(line);
+      });
+
+      cItems.addEventListener('input', (e) => {
+        if (e.target.classList.contains('l-qty') || e.target.classList.contains('l-price')) updateTotals();
+      });
+
+      cItems.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('l-remove')) return;
+        if (cItems.children.length <= 1) return alert("A contract needs at least one product");
+        e.target.closest('.contract-line').remove();
+        updateTotals();
+      });
+
+      document.getElementById('addLineBtn').addEventListener('click', addLine);
+
+      document.getElementById('contractBtn').addEventListener('click', () => {
+        document.getElementById('contractForm').reset();
+        cItems.innerHTML = "";
+        addLine();
+        document.getElementById('cDate').value = nowLocal();
+        document.getElementById('cApproved').value = session.profile.name || currentUser.email;
+        cTotal.value = "";
+        cModal.style.display = "flex";
+      });
+
+      document.getElementById('contractForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const agent = document.getElementById('cAgent').value.trim();
+        const approvedBy = document.getElementById('cApproved').value.trim();
+        const note = document.getElementById('cNote').value.trim();
+        const when = new Date(document.getElementById('cDate').value);
+        if (isNaN(when.getTime())) return alert("Check the date");
+
+        const work = {};
+        const items = [];
+
+        const lines = cItems.querySelectorAll('.contract-line');
+        for (const line of lines) {
+          const product = allProducts.find(p => p.id === line.querySelector('.l-product').value);
+          if (!product) return alert("Please select a product on every line");
+
+          const qty = Number(line.querySelector('.l-qty').value);
+          const unitPrice = Number(line.querySelector('.l-price').value);
+          if (!(qty > 0) || isNaN(unitPrice)) return alert("Check the quantity and price on every line");
+
+          if (!work[product.id]) work[product.id] = JSON.parse(JSON.stringify(product));
+          const wp = work[product.id];
+
+          let variantName = null;
+          if (wp.hasVariants) {
+            const idx = Number(line.querySelector('.l-variant').value);
+            if (!wp.variants[idx]) return alert("Please select a size for " + product.name);
+            const newStock = (Number(wp.variants[idx].stock) || 0) - qty;
+            if (newStock < 0) return alert("Not enough stock for " + product.name + " (" + wp.variants[idx].size + ")");
+            wp.variants[idx].stock = newStock;
+            variantName = wp.variants[idx].size;
+          } else {
+            const newStock = (Number(wp.stock) || 0) - qty;
+            if (newStock < 0) return alert("Not enough stock for " + product.name);
+            wp.stock = newStock;
+          }
+
+          items.push({
+            productId: product.id,
+            productName: product.name,
+            variant: variantName,
+            quantity: qty,
+            unitPrice,
+            lineTotal: qty * unitPrice
+          });
+        }
+
+        const totalValue = items.reduce((s, i) => s + i.lineTotal, 0);
+        const totalQuantity = items.reduce((s, i) => s + i.quantity, 0);
+
+        try {
+          const batch = writeBatch(db);
+
+          Object.values(work).forEach(wp => {
+            if (wp.hasVariants) {
+              const totalStock = wp.variants.reduce((s, v) => s + (Number(v.stock) || 0), 0);
+              batch.update(doc(db, "products", wp.id), {
+                variants: wp.variants, totalStock, updatedAt: serverTimestamp()
+              });
+            } else {
+              batch.update(doc(db, "products", wp.id), {
+                stock: wp.stock, totalStock: wp.stock, updatedAt: serverTimestamp()
+              });
+            }
+          });
+
+          batch.set(doc(collection(db, "contracts")), {
+            agentName: agent,
+            agentPhone: document.getElementById('cPhone').value.trim() || null,
+            items,
+            totalQuantity,
+            totalValue,
+            contractDate: when,
+            approvedBy,
+            note: note || null,
+            status: "active",
+            createdBy: currentUser.email,
+            createdAt: serverTimestamp()
+          });
+
+          items.forEach(it => {
+            batch.set(doc(collection(db, "stock_movements")), {
+              type: "out",
+              productId: it.productId,
+              productName: it.productName,
+              variant: it.variant,
+              quantity: it.quantity,
+              reason: "Contract: " + agent + (note ? " - " + note : ""),
+              userEmail: currentUser.email,
+              createdAt: serverTimestamp()
+            });
+          });
+
+          await batch.commit();
+
+          closeContract();
+          loadCurrentStock();
+          loadMovements();
+          loadProductsForSelect();
+          loadContracts();
+          alert("Contract saved and stock deducted");
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
+      });
+
+      async function loadContracts() {
+        const body = document.getElementById('contractsBody');
+        const none = document.getElementById('noContracts');
+        const sumBody = document.getElementById('agentSummaryBody');
+        const noAgents = document.getElementById('noAgents');
+        body.innerHTML = "";
+        sumBody.innerHTML = "";
+
+        const snap = await getDocs(query(collection(db, "contracts"), orderBy("createdAt", "desc")));
+        none.style.display = snap.empty ? "block" : "none";
+
+        const agents = {};
+        snap.forEach(d => {
+          const c = d.data();
+          const date = c.contractDate ? c.contractDate.toDate().toLocaleString() : "-";
+
+          const items = c.items || [{
+            productName: c.productName, variant: c.variant,
+            quantity: c.quantity, unitPrice: c.unitPrice
+          }];
+          const totalQty = c.totalQuantity ?? c.quantity ?? 0;
+
+          if (c.status === "active") {
+            const key = c.agentName;
+            agents[key] = agents[key] || { count: 0, total: 0 };
+            agents[key].count++;
+            agents[key].total += c.totalValue || 0;
+          }
+
+          const productsHtml = items.map(i =>
+            `${esc(i.productName)}${i.variant ? " (" + esc(i.variant) + ")" : ""} × ${i.quantity} @ KES ${(i.unitPrice || 0).toLocaleString()}`
+          ).join("<br>");
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${date}</td>
+            <td>${esc(c.agentName)}${c.agentPhone ? "<br><small>" + esc(c.agentPhone) + "</small>" : ""}</td>
+            <td>${productsHtml}</td>
+            <td>${totalQty}</td>
+            <td><strong>KES ${(c.totalValue || 0).toLocaleString()}</strong></td>
+            <td>${esc(c.approvedBy)}</td>
+            <td>${c.status === "active"
+              ? '<span style="color:#e67e22">With agent</span>'
+              : '<span style="color:green">Settled</span>'}</td>
+            <td>${c.status === "active"
+              ? `<button class="btn-secondary settle-btn" data-id="${d.id}">Mark Settled</button>` : ""}</td>`;
+          body.appendChild(tr);
+        });
+
+        const names = Object.keys(agents);
+        noAgents.style.display = names.length ? "none" : "block";
+        names.forEach(n => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${esc(n)}</td><td>${agents[n].count}</td>
+            <td><strong>KES ${agents[n].total.toLocaleString()}</strong></td>`;
+          sumBody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('contractsBody').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.settle-btn');
+        if (!btn) return;
+        if (!confirm("Mark this contract as settled?")) return;
+        await updateDoc(doc(db, "contracts", btn.dataset.id), {
+          status: "settled", settledAt: serverTimestamp()
+        });
+        loadContracts();
+      });
+
+      loadContracts();
+    }
+
+    loadCurrentStock();
+    loadMovements();
+    loadProductsForSelect();
+    loadSuppliers();
+  </script>
+
+</body>
+</html>

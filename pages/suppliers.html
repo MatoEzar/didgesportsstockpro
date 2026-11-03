@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suppliers | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item active"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Suppliers</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info"><span id="userEmail">Loading...</span></div>
+    </header>
+    <section class="page-content">
+      <div class="actions-bar">
+        <button class="btn-primary" id="addSupplierBtn">+ Add Supplier</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search suppliers...">
+        </div>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Phone</th>
+              <th>Goods received</th>
+              <th>Cash paid</th>
+              <th>Position</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="suppliersBody"></tbody>
+        </table>
+        <p id="noSuppliers" class="empty-state" style="display:none;">No suppliers yet.</p>
+      </div>
+      <div id="detailSection" style="display:none; margin-top:25px;">
+        <div class="actions-bar">
+          <div>
+            <h2 id="detailTitle" style="color:#1e3c72; font-size:20px;"></h2>
+            <p id="positionLine" style="margin-top:4px; font-weight:600;"></p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-primary" id="receiveBtn">+ Goods received</button>
+            <button class="btn-secondary" id="payBtn">We paid cash</button>
+            <button class="btn-secondary" id="oweBtn">They owe us</button>
+          </div>
+        </div>
+        <div class="stats-grid" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <h3>Goods received</h3>
+            <p class="stat-number" id="detailReceived">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Cash we paid</h3>
+            <p class="stat-number" id="detailPaid">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Cash they owe us</h3>
+            <p class="stat-number" id="detailCashCredit">KES 0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Net position</h3>
+            <p class="stat-number" id="detailNet">KES 0</p>
+            <small id="detailNetLabel"></small>
+          </div>
+        </div>
+        <div class="table-card" style="margin-bottom:20px;">
+          <h3 style="padding:15px 20px 5px; color:#1e3c72;">Goods they supplied</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit cost</th>
+                <th>Amount</th>
+                <th>In stock</th>
+                <th>By</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="purchasesBody"></tbody>
+          </table>
+          <p id="noPurchases" class="empty-state" style="display:none;">Nothing received yet.</p>
+        </div>
+        <div class="table-card" style="margin-bottom:20px;">
+          <h3 style="padding:15px 20px 5px; color:#1e3c72;">Cash we paid them</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>From</th>
+                <th>Note</th>
+                <th>By</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+          <p id="noPayments" class="empty-state" style="display:none;">No payments yet.</p>
+        </div>
+        <div class="table-card">
+          <h3 style="padding:15px 20px 5px; color:#1e3c72;">What they still owe us</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Details</th>
+                <th>Value</th>
+                <th>By</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="creditsBody"></tbody>
+          </table>
+          <p id="noCredits" class="empty-state" style="display:none;">Nothing outstanding from this supplier.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="modal" id="supplierModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="supplierModalTitle">Add Supplier</h2>
+        <button class="close-btn" data-close="supplierModal">&times;</button>
+      </div>
+      <form id="supplierForm">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="supplierName" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="supplierPhone">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="supplierEmail">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" id="supplierNotes">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="supplierModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal" id="receiveModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Goods received</h2>
+        <button class="close-btn" data-close="receiveModal">&times;</button>
+      </div>
+      <form id="receiveForm">
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="customItem"> This item is not in the product list
+          </label>
+        </div>
+        <div class="form-group" id="catalogGroup">
+          <label>Product *</label>
+          <select id="productSelect">
+            <option value="">Select product</option>
+          </select>
+        </div>
+        <div class="form-group" id="variantGroup" style="display:none;">
+          <label>Size / variant *</label>
+          <select id="variantSelect"></select>
+        </div>
+        <div class="form-group" id="customGroup" style="display:none;">
+          <label>Item name *</label>
+          <input type="text" id="customName" placeholder="e.g. Shin guards senior">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity *</label>
+            <input type="number" id="qty" min="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label>Unit cost (KES) *</label>
+            <input type="number" id="unitCost" min="0" step="0.01" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="trackStock" checked> Add this quantity into stock
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="receiveNote" placeholder="Invoice or delivery note">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="receiveModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal" id="payModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Cash we paid</h2>
+        <button class="close-btn" data-close="payModal">&times;</button>
+      </div>
+      <form id="payForm">
+        <div class="form-group">
+          <label>Amount (KES) *</label>
+          <input type="number" id="payAmount" min="1" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Paid from *</label>
+          <select id="payMethod" required>
+            <option value="Cash">Cash</option>
+            <option value="Till">Till</option>
+            <option value="Bank">Bank</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="payNote">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="payModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal" id="oweModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Supplier owes us</h2>
+        <button class="close-btn" data-close="oweModal">&times;</button>
+      </div>
+      <form id="oweForm">
+        <div class="form-group">
+          <label>They owe us *</label>
+          <select id="oweKind" required>
+            <option value="cash">Cash</option>
+            <option value="goods">Goods</option>
+          </select>
+        </div>
+        <div id="oweCashFields">
+          <div class="form-group">
+            <label>Cash amount (KES) *</label>
+            <input type="number" id="oweAmount" min="1" step="0.01">
+          </div>
+        </div>
+        <div id="oweGoodsFields" style="display:none;">
+          <div class="form-group">
+            <label>Item *</label>
+            <input type="text" id="oweItem">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Quantity *</label>
+              <input type="number" id="oweQty" min="1" value="1">
+            </div>
+            <div class="form-group">
+              <label>Value (KES)</label>
+              <input type="number" id="oweValue" min="0" step="0.01" value="0">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="oweNote" placeholder="Short delivery, return, overpayment">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="oweModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    let currentUser = null;
+    let suppliers = [];
+    let purchases = [];
+    let payments = [];
+    let credits = [];
+    let products = [];
+    let selectedId = null;
+    let editingSupplierId = null;
+    const money = (n) => "KES " + Number(n || 0).toLocaleString();
+
+    const session = await guard("suppliers");
+    currentUser = session.user;
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+    document.querySelectorAll("[data-close]").forEach((el) => {
+      el.addEventListener("click", () => {
+        document.getElementById(el.dataset.close).style.display = "none";
+      });
+    });
+    const show = (id) => { document.getElementById(id).style.display = "flex"; };
+    document.getElementById("addSupplierBtn").addEventListener("click", () => {
+      editingSupplierId = null;
+      document.getElementById("supplierModalTitle").textContent = "Add Supplier";
+      document.getElementById("supplierForm").reset();
+      show("supplierModal");
+    });
+    document.getElementById("receiveBtn").addEventListener("click", () => {
+      if (!selectedId) return;
+      document.getElementById("receiveForm").reset();
+      document.getElementById("customItem").checked = false;
+      document.getElementById("trackStock").checked = true;
+      toggleCustom(false);
+      fillProducts();
+      show("receiveModal");
+    });
+    document.getElementById("payBtn").addEventListener("click", () => {
+      if (!selectedId) return;
+      document.getElementById("payForm").reset();
+      show("payModal");
+    });
+    document.getElementById("oweBtn").addEventListener("click", () => {
+      if (!selectedId) return;
+      document.getElementById("oweForm").reset();
+      toggleOwe("cash");
+      show("oweModal");
+    });
+    document.getElementById("customItem").addEventListener("change", (e) => toggleCustom(e.target.checked));
+    document.getElementById("oweKind").addEventListener("change", (e) => toggleOwe(e.target.value));
+    function toggleCustom(on) {
+      document.getElementById("catalogGroup").style.display = on ? "none" : "block";
+      document.getElementById("customGroup").style.display = on ? "block" : "none";
+      document.getElementById("variantGroup").style.display = "none";
+      document.getElementById("productSelect").required = !on;
+      document.getElementById("customName").required = on;
+    }
+    function toggleOwe(kind) {
+      const cash = kind === "cash";
+      document.getElementById("oweCashFields").style.display = cash ? "block" : "none";
+      document.getElementById("oweGoodsFields").style.display = cash ? "none" : "block";
+      document.getElementById("oweAmount").required = cash;
+      document.getElementById("oweItem").required = !cash;
+      document.getElementById("oweQty").required = !cash;
+    }
+    async function refresh() {
+      const [sSnap, pSnap, paySnap, cSnap, prodSnap] = await Promise.all([
+        getDocs(query(collection(db, "suppliers"), orderBy("name"))),
+        getDocs(query(collection(db, "purchases"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "supplier_payments"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "supplier_credits"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "products"), orderBy("name")))
+      ]);
+      suppliers = sSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      purchases = pSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      payments = paySnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      credits = cSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      products = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderSuppliers();
+      if (selectedId) renderDetail();
+    }
+    function position(id) {
+      const received = purchases.filter((p) => p.supplierId === id).reduce((s, p) => s + Number(p.total || 0), 0);
+      const paid = payments.filter((p) => p.supplierId === id).reduce((s, p) => s + Number(p.amount || 0), 0);
+      const cashCredit = credits.filter((c) => c.supplierId === id && c.kind === "cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const goods = credits.filter((c) => c.supplierId === id && c.kind === "goods");
+      const net = received - paid - cashCredit;
+      return { received, paid, cashCredit, goods, net };
+    }
+    function positionText(p) {
+      if (Math.abs(p.net) < 0.5 && !p.goods.length) return "Settled";
+      if (p.net > 0) return "You owe " + money(p.net);
+      if (p.net < 0) return "They owe you " + money(Math.abs(p.net));
+      return "Goods still owed";
+    }
+    function renderSuppliers() {
+      const tbody = document.getElementById("suppliersBody");
+      const term = document.getElementById("searchInput").value.toLowerCase();
+      const list = suppliers.filter((s) => (s.name || "").toLowerCase().includes(term) || (s.phone || "").toLowerCase().includes(term));
+      tbody.innerHTML = "";
+      document.getElementById("noSuppliers").style.display = list.length ? "none" : "block";
+      list.forEach((s) => {
+        const p = position(s.id);
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.innerHTML = `
+          <td><strong>${s.name}</strong></td>
+          <td>${s.phone || "-"}</td>
+          <td>${money(p.received)}</td>
+          <td>${money(p.paid)}</td>
+          <td class="${p.net > 0 ? "low-stock" : ""}"><strong>${positionText(p)}</strong></td>
+          <td>
+            <button class="btn-edit" data-edit="${s.id}">Edit</button>
+            <button class="btn-delete" data-del="${s.id}">Delete</button>
+          </td>`;
+        tr.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          selectedId = s.id;
+          renderDetail();
+        });
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => editSupplier(b.dataset.edit)));
+      tbody.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => deleteSupplier(b.dataset.del)));
+    }
+    document.getElementById("searchInput").addEventListener("input", renderSuppliers);
+    function when(ts) {
+      return ts && ts.toDate ? ts.toDate().toLocaleString() : "-";
+    }
+    function renderDetail() {
+      const s = suppliers.find((x) => x.id === selectedId);
+      const section = document.getElementById("detailSection");
+      if (!s) {
+        section.style.display = "none";
+        return;
+      }
+      section.style.display = "block";
+      const p = position(s.id);
+      document.getElementById("detailTitle").textContent = s.name;
+      document.getElementById("positionLine").textContent = positionText(p);
+      document.getElementById("positionLine").style.color = p.net > 0 ? "#c0392b" : p.net < 0 ? "#1e7a46" : "#1e3c72";
+      document.getElementById("detailReceived").textContent = money(p.received);
+      document.getElementById("detailPaid").textContent = money(p.paid);
+      document.getElementById("detailCashCredit").textContent = money(p.cashCredit);
+      document.getElementById("detailNet").textContent = money(Math.abs(p.net));
+      document.getElementById("detailNetLabel").textContent = p.net > 0 ? "You owe them" : p.net < 0 ? "They owe you" : "Settled";
+      const rows = purchases.filter((x) => x.supplierId === s.id);
+      const pBody = document.getElementById("purchasesBody");
+      pBody.innerHTML = "";
+      document.getElementById("noPurchases").style.display = rows.length ? "none" : "block";
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${when(row.createdAt)}</td>
+          <td>${row.productName}${row.variant ? " (" + row.variant + ")" : ""}</td>
+          <td>${row.quantity}</td>
+          <td>${money(row.unitCost)}</td>
+          <td><strong>${money(row.total)}</strong></td>
+          <td>${row.trackedInStock === false ? "No" : "Yes"}</td>
+          <td>${row.userEmail || "-"}</td>
+          <td><button class="btn-delete" data-id="${row.id}">Delete</button></td>`;
+        pBody.appendChild(tr);
+      });
+      pBody.querySelectorAll(".btn-delete").forEach((b) => b.addEventListener("click", () => deletePurchase(b.dataset.id)));
+      const pays = payments.filter((x) => x.supplierId === s.id);
+      const payBody = document.getElementById("paymentsBody");
+      payBody.innerHTML = "";
+      document.getElementById("noPayments").style.display = pays.length ? "none" : "block";
+      pays.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${when(row.createdAt)}</td>
+          <td><strong>${money(row.amount)}</strong></td>
+          <td>${row.method}</td>
+          <td>${row.note || "-"}</td>
+          <td>${row.userEmail || "-"}</td>
+          <td><button class="btn-delete" data-id="${row.id}">Delete</button></td>`;
+        payBody.appendChild(tr);
+      });
+      payBody.querySelectorAll(".btn-delete").forEach((b) => b.addEventListener("click", () => deletePayment(b.dataset.id)));
+      const owed = credits.filter((x) => x.supplierId === s.id);
+      const cBody = document.getElementById("creditsBody");
+      cBody.innerHTML = "";
+      document.getElementById("noCredits").style.display = owed.length ? "none" : "block";
+      owed.forEach((row) => {
+        const details = row.kind === "goods"
+          ? `${row.quantity} × ${row.itemName}${row.note ? " — " + row.note : ""}`
+          : (row.note || "Cash");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${when(row.createdAt)}</td>
+          <td>${row.kind === "goods" ? "Goods" : "Cash"}</td>
+          <td>${details}</td>
+          <td>${money(row.amount || row.value || 0)}</td>
+          <td>${row.userEmail || "-"}</td>
+          <td><button class="btn-delete" data-id="${row.id}">Delete</button></td>`;
+        cBody.appendChild(tr);
+      });
+      cBody.querySelectorAll(".btn-delete").forEach((b) => b.addEventListener("click", () => deleteCredit(b.dataset.id)));
+    }
+    document.getElementById("supplierForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("supplierName").value.trim(),
+        phone: document.getElementById("supplierPhone").value.trim(),
+        email: document.getElementById("supplierEmail").value.trim(),
+        notes: document.getElementById("supplierNotes").value.trim(),
+        updatedAt: serverTimestamp()
+      };
+      if (editingSupplierId) await updateDoc(doc(db, "suppliers", editingSupplierId), data);
+      else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db, "suppliers"), data);
+      }
+      document.getElementById("supplierModal").style.display = "none";
+      await refresh();
+    });
+    function editSupplier(id) {
+      const s = suppliers.find((x) => x.id === id);
+      if (!s) return;
+      editingSupplierId = id;
+      document.getElementById("supplierModalTitle").textContent = "Edit Supplier";
+      document.getElementById("supplierName").value = s.name || "";
+      document.getElementById("supplierPhone").value = s.phone || "";
+      document.getElementById("supplierEmail").value = s.email || "";
+      document.getElementById("supplierNotes").value = s.notes || "";
+      show("supplierModal");
+    }
+    async function deleteSupplier(id) {
+      if (purchases.some((p) => p.supplierId === id) || payments.some((p) => p.supplierId === id) || credits.some((c) => c.supplierId === id)) {
+        alert("Delete this supplier's receipts, payments and owed items first.");
+        return;
+      }
+      if (!confirm("Delete this supplier?")) return;
+      await deleteDoc(doc(db, "suppliers", id));
+      if (selectedId === id) selectedId = null;
+      await refresh();
+    }
+    function fillProducts() {
+      const select = document.getElementById("productSelect");
+      select.innerHTML = `<option value="">Select product</option>`;
+      products.forEach((p) => {
+        select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+    }
+    document.getElementById("productSelect").addEventListener("change", (e) => {
+      const product = products.find((p) => p.id === e.target.value);
+      const group = document.getElementById("variantGroup");
+      const select = document.getElementById("variantSelect");
+      if (product && product.hasVariants && product.variants) {
+        group.style.display = "block";
+        select.innerHTML = product.variants.map((v, i) => `<option value="${i}">${v.size}</option>`).join("");
+        document.getElementById("unitCost").value = product.variants[0].cost || 0;
+      } else {
+        group.style.display = "none";
+        document.getElementById("unitCost").value = product ? (product.cost || 0) : "";
+      }
+    });
+    async function applyStock(productId, variant, qty, unitCost) {
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+      if (product.hasVariants && variant) {
+        const variants = product.variants.map((v) => ({ ...v }));
+        const idx = variants.findIndex((v) => v.size === variant);
+        if (idx === -1) return;
+        variants[idx].stock = (variants[idx].stock || 0) + qty;
+        variants[idx].cost = unitCost;
+        const totalStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+        await updateDoc(doc(db, "products", productId), { variants, totalStock, updatedAt: serverTimestamp() });
+      } else {
+        const stock = (product.stock || 0) + qty;
+        await updateDoc(doc(db, "products", productId), {
+          stock, totalStock: stock, cost: unitCost, updatedAt: serverTimestamp()
+        });
+      }
+    }
+    document.getElementById("receiveForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const supplier = suppliers.find((s) => s.id === selectedId);
+      if (!supplier) return;
+      const qty = Number(document.getElementById("qty").value);
+      const unitCost = Number(document.getElementById("unitCost").value);
+      const track = document.getElementById("trackStock").checked;
+      const custom = document.getElementById("customItem").checked;
+      const note = document.getElementById("receiveNote").value.trim();
+      let productId = null;
+      let productName = "";
+      let variant = null;
+      if (custom) {
+        productName = document.getElementById("customName").value.trim();
+        if (!productName) return alert("Enter the item name");
+        if (track) {
+          const existing = products.find((p) => p.name.toLowerCase() === productName.toLowerCase() && !p.hasVariants);
+          if (existing) {
+            productId = existing.id;
+            await applyStock(productId, null, qty, unitCost);
+          } else {
+            const ref = await addDoc(collection(db, "products"), {
+              name: productName,
+              category: "Uncategorised",
+              hasVariants: false,
+              cost: unitCost,
+              selling: 0,
+              stock: qty,
+              totalStock: qty,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            productId = ref.id;
+          }
+        }
+      } else {
+        const product = products.find((p) => p.id === document.getElementById("productSelect").value);
+        if (!product) return alert("Select a product");
+        productId = product.id;
+        productName = product.name;
+        if (product.hasVariants) {
+          const idx = Number(document.getElementById("variantSelect").value);
+          variant = product.variants[idx].size;
+        }
+        if (track) await applyStock(productId, variant, qty, unitCost);
+      }
+      await addDoc(collection(db, "purchases"), {
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        productId,
+        productName,
+        variant,
+        quantity: qty,
+        unitCost,
+        total: qty * unitCost,
+        trackedInStock: track,
+        note: note || null,
+        userEmail: currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      if (track && productId) {
+        await addDoc(collection(db, "stock_movements"), {
+          type: "in",
+          productId,
+          productName,
+          variant,
+          quantity: qty,
+          reason: `Purchase from ${supplier.name}`,
+          userEmail: currentUser.email,
+          createdAt: serverTimestamp()
+        });
+      }
+      document.getElementById("receiveModal").style.display = "none";
+      await refresh();
+    });
+    document.getElementById("payForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const supplier = suppliers.find((s) => s.id === selectedId);
+      if (!supplier) return;
+      await addDoc(collection(db, "supplier_payments"), {
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        amount: Number(document.getElementById("payAmount").value),
+        method: document.getElementById("payMethod").value,
+        note: document.getElementById("payNote").value.trim() || null,
+        userEmail: currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("payModal").style.display = "none";
+      await refresh();
+    });
+    document.getElementById("oweForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const supplier = suppliers.find((s) => s.id === selectedId);
+      if (!supplier) return;
+      const kind = document.getElementById("oweKind").value;
+      const data = {
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        kind,
+        note: document.getElementById("oweNote").value.trim() || null,
+        userEmail: currentUser.email,
+        createdAt: serverTimestamp()
+      };
+      if (kind === "cash") {
+        data.amount = Number(document.getElementById("oweAmount").value);
+        data.itemName = null;
+        data.quantity = null;
+      } else {
+        data.itemName = document.getElementById("oweItem").value.trim();
+        data.quantity = Number(document.getElementById("oweQty").value);
+        data.amount = Number(document.getElementById("oweValue").value) || 0;
+        if (!data.itemName) return alert("Enter the item");
+      }
+      await addDoc(collection(db, "supplier_credits"), data);
+      document.getElementById("oweModal").style.display = "none";
+      await refresh();
+    });
+    async function reverseStock(purchase) {
+      if (!purchase.trackedInStock || !purchase.productId) return true;
+      const snap = await getDocs(collection(db, "products"));
+      let product = null;
+      snap.forEach((d) => { if (d.id === purchase.productId) product = { id: d.id, ...d.data() }; });
+      if (!product) return true;
+      if (product.hasVariants && purchase.variant) {
+        const variants = product.variants.map((v) => ({ ...v }));
+        const idx = variants.findIndex((v) => v.size === purchase.variant);
+        if (idx === -1) return true;
+        const next = (variants[idx].stock || 0) - purchase.quantity;
+        if (next < 0) return false;
+        variants[idx].stock = next;
+        const totalStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+        await updateDoc(doc(db, "products", product.id), { variants, totalStock });
+      } else {
+        const next = (product.stock || 0) - purchase.quantity;
+        if (next < 0) return false;
+        await updateDoc(doc(db, "products", product.id), { stock: next, totalStock: next });
+      }
+      return true;
+    }
+    async function deletePurchase(id) {
+      const purchase = purchases.find((p) => p.id === id);
+      if (!purchase || !confirm("Delete this receipt? Stock will be reduced if it was added.")) return;
+      const ok = await reverseStock(purchase);
+      if (!ok) return alert("Cannot delete. Stock would go below zero.");
+      await deleteDoc(doc(db, "purchases", id));
+      await refresh();
+    }
+    async function deletePayment(id) {
+      if (!confirm("Delete this payment?")) return;
+      await deleteDoc(doc(db, "supplier_payments", id));
+      await refresh();
+    }
+    async function deleteCredit(id) {
+      if (!confirm("Remove this owed item?")) return;
+      await deleteDoc(doc(db, "supplier_credits", id));
+      await refresh();
+    }
+
+    await refresh();
+  </script>
+</body>
+</html>

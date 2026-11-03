@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+  <script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .import-card {
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .import-card h2 {
+      color: #1e3c72;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .import-card p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+    .import-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 15px 0;
+    }
+    .import-input {
+      width: 100%;
+      min-width: 110px;
+      padding: 9px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      background: white;
+      font-size: 13px;
+      color: #222;
+    }
+    .import-input:focus {
+      outline: 2px solid #93c5fd;
+      border-color: #2563eb;
+    }
+    .import-table-wrap {
+      overflow-x: auto;
+      max-width: 100%;
+      margin-top: 16px;
+    }
+    .import-table {
+      width: 100%;
+      min-width: 1250px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .import-table th,
+    .import-table td {
+      padding: 11px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .import-table th {
+      background: #f1f5f9;
+      color: #1e3c72;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    .import-table td input,
+    .import-table td select {
+      min-width: 125px;
+    }
+    .money-in {
+      color: #15803d;
+      font-weight: 700;
+    }
+    .money-out {
+      color: #dc2626;
+      font-weight: 700;
+    }
+    .import-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin: 15px 0;
+    }
+    .import-stat {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .import-stat small {
+      display: block;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .import-stat strong {
+      color: #1e3c72;
+      font-size: 19px;
+    }
+    .import-message {
+      margin: 12px 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 13px;
+    }
+    .import-error {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .import-success {
+      background: #f0fdf4;
+      color: #166534;
+    }
+    .import-hidden {
+      display: none !important;
+    }
+    .statement-toolbar {
+      display: flex;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 15px;
+    }
+    .statement-toolbar .form-group {
+      flex: 1;
+      min-width: 190px;
+    }
+    .statement-toolbar label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .statement-toolbar button {
+      min-height: 39px;
+    }
+    .statement-note {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 10px;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 11px;
+    }
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    @media (max-width: 700px) {
+      .import-card { padding: 15px; }
+      .import-actions { align-items: stretch; }
+      .import-actions button { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="products.html" data-page="products" class="nav-item">
+        <span>📦</span> Products
+      </a>
+      <a href="import.html" data-page="import" class="nav-item active">
+        <span>📥</span> Import
+      </a>
+      <a href="stock.html" data-page="stock" class="nav-item">
+        <span>🔄</span> Stock
+      </a>
+      <a href="sales.html" data-page="sales" class="nav-item">
+        <span>🛒</span> Sales
+      </a>
+      <a href="customers.html" data-page="customers" class="nav-item">
+        <span>🧑‍🤝‍🧑</span> Customers
+      </a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item">
+        <span>🚚</span> Suppliers
+      </a>
+      <a href="cash.html" data-page="cash" class="nav-item">
+        <span>💰</span> Cash & Bank
+      </a>
+      <a href="expenses.html" data-page="expenses" class="nav-item">
+        <span>📉</span> Expenses
+      </a>
+      <a href="money.html" data-page="money" class="nav-item">
+        <span>🧾</span> Money
+      </a>
+      <a href="staff.html" data-page="staff" class="nav-item">
+        <span>👤</span> Staff
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Import</h1>
+        <p id="welcomeRole" style="font-size:13px;color:#666;"></p>
+      </div>
+      <div class="user-info">
+        <span id="userEmail">Loading...</span>
+      </div>
+    </header>
+
+    <section class="page-content">
+
+      <div class="table-card import-card">
+        <h2>📦 Products from Excel</h2>
+        <p>
+          Import products from Excel or CSV.
+          One row represents one product or product size.
+        </p>
+        <p>
+          Required columns:
+          <strong>name, category, size, barcode, cost, selling, stock</strong>
+        </p>
+
+        <div class="import-actions">
+          <button class="btn-secondary" id="templateBtn" type="button">
+            Download Product Template
+          </button>
+          <label class="btn-primary" style="cursor:pointer;">
+            Choose Product File
+            <input
+              type="file"
+              id="fileInput"
+              accept=".xlsx,.xls,.csv"
+              hidden
+            >
+          </label>
+        </div>
+      </div>
+
+      <div id="previewCard" class="table-card import-card" style="display:none;">
+        <h2>Product Preview</h2>
+        <p id="previewSummary"></p>
+
+        <div class="import-actions">
+          <select id="importMode" class="import-input" style="max-width:350px;">
+            <option value="update">
+              Update existing products and add new ones
+            </option>
+            <option value="new">Add new products only</option>
+          </select>
+          <button class="btn-primary" id="saveBtn" type="button">
+            Save Products
+          </button>
+        </div>
+
+        <div class="import-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Sizes</th>
+                <th>Stock</th>
+                <th>Selling</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <p id="previewMore"></p>
+      </div>
+
+      <div id="bankSection" data-roles="admin">
+
+        <div class="table-card import-card">
+          <h2>🏦 Bank Statement Import</h2>
+          <p>
+            Import transactions from a bank or M-Pesa statement.
+            Link each transaction to a customer, supplier or
+            expense before saving.
+          </p>
+          <p>
+            Supports Excel and CSV. Saving records each line once:
+            a customer payment lowers that customer's balance and adds
+            money to the account, a supplier payment lowers what you owe
+            and takes money out, and an expense goes to Expenses.
+            Product stock is not changed.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="statementAccount">
+                Account this statement belongs to
+              </label>
+              <select id="statementAccount" class="import-input">
+                <option value="">Loading accounts...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="statementFile">Statement File</label>
+              <input
+                type="file"
+                id="statementFile"
+                class="import-input"
+                accept=".xlsx,.xls,.csv"
+              >
+            </div>
+          </div>
+
+          <div class="import-actions">
+            <button
+              class="btn-secondary"
+              id="statementTemplateBtn"
+              type="button"
+            >
+              Download Statement Template
+            </button>
+          </div>
+
+          <div class="import-message">
+            You can edit transaction details and choose the
+            customer, supplier, product, or expense category
+            before saving the imported statement. Do not import a payment
+            you have already recorded by hand, or it will be counted twice.
+          </div>
+        </div>
+
+        <div
+          id="statementPreview"
+          class="table-card import-card"
+          style="display:none;"
+        >
+          <h2>📋 Bank Statement Preview</h2>
+          <p id="statementSummary"></p>
+
+          <div class="import-stats">
+            <div class="import-stat">
+              <small>Total Transactions</small>
+              <strong id="statementCount">0</strong>
+            </div>
+            <div class="import-stat">
+              <small>Money In</small>
+              <strong id="statementIn">KES 0</strong>
+            </div>
+            <div class="import-stat">
+              <small>Money Out</small>
+              <strong id="statementOut">KES 0</strong>
+            </div>
+            <div class="import-stat">
+              <small>Net Movement</small>
+              <strong id="statementNet">KES 0</strong>
+            </div>
+          </div>
+
+          <div class="statement-toolbar">
+            <div class="form-group">
+              <label for="statementSearch">Search Transactions</label>
+              <input
+                id="statementSearch"
+                class="import-input"
+                placeholder="Search particulars or reference..."
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="statementTypeFilter">Transaction Type</label>
+              <select id="statementTypeFilter" class="import-input">
+                <option value="">All Transactions</option>
+                <option value="customer">Customer</option>
+                <option value="supplier">Supplier</option>
+                <option value="expense">Expense</option>
+                <option value="transfer">Transfer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" id="saveStatementBtn" type="button">
+              Save Statement
+            </button>
+          </div>
+
+          <div id="statementMessage"></div>
+
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Particulars</th>
+                  <th>Product</th>
+                  <th>Account</th>
+                  <th>Transaction Type</th>
+                  <th>Customer / Supplier / Expense</th>
+                  <th>Money In (KES)</th>
+                  <th>Money Out (KES)</th>
+                  <th>Reference</th>
+                </tr>
+              </thead>
+              <tbody id="statementBody"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination-bar">
+            <span id="statementMore"></span>
+            <div class="import-actions">
+              <button
+                class="btn-secondary"
+                id="previousStatementPage"
+                type="button"
+              >Previous</button>
+              <span id="statementPageLabel">Page 1</span>
+              <button
+                class="btn-secondary"
+                id="nextStatementPage"
+                type="button"
+              >Next</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card import-card">
+          <h2>💾 Saved Bank Transactions</h2>
+          <p>
+            View transactions previously imported for the
+            selected account, including their linked records.
+          </p>
+
+          <div class="import-actions">
+            <button class="btn-secondary" id="refreshStatements" type="button">
+              Refresh Transactions
+            </button>
+          </div>
+
+          <div id="savedStatementMessage"></div>
+
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Particulars</th>
+                  <th>Product</th>
+                  <th>Account</th>
+                  <th>Type</th>
+                  <th>Customer / Supplier / Expense</th>
+                  <th>Money In</th>
+                  <th>Money Out</th>
+                </tr>
+              </thead>
+              <tbody id="savedStatementBody"></tbody>
+            </table>
+          </div>
+          <p id="savedStatementMore"></p>
+        </div>
+
+        <div
+          id="compareCard"
+          class="table-card import-card"
+          style="display:none;"
+        >
+          <h2>📊 Compare with Your Records</h2>
+
+          <div class="import-stats">
+            <div class="import-stat">
+              <small>Statement Movement</small>
+              <strong id="compareStatement">KES 0</strong>
+            </div>
+            <div class="import-stat">
+              <small>System Movement</small>
+              <strong id="compareSystem">KES 0</strong>
+            </div>
+            <div class="import-stat">
+              <small>Difference</small>
+              <strong id="compareDiff">KES 0</strong>
+            </div>
+          </div>
+          <p id="compareNote"></p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import * as XLSX from
+      "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
+
+    import { auth, db } from "../js/firebase-config.js";
+
+    import { signOut } from
+      "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+
+    import {
+      collection,
+      getDocs,
+      doc,
+      writeBatch,
+      serverTimestamp,
+      query,
+      where,
+      Timestamp
+    } from
+      "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+    import { guard } from "../js/roles.js";
+
+    const session = await guard("import");
+    const currentUser = session.user;
+    const isAdmin = session.profile.role === "admin";
+
+    let parsed = [];
+    let statementRows = [];
+    let accounts = [];
+    let customers = [];
+    let suppliers = [];
+    let products = [];
+    let expenses = [];
+    let expenseCategories = [];
+
+    let statementPage = 0;
+    const PAGE_SIZE = 20;
+
+    const $ = id => document.getElementById(id);
+
+    // Adds a listener only when the element exists (the bank section is admin only)
+    const on = (id, eventName, handler) => {
+      const element = $(id);
+      if (element) element.addEventListener(eventName, handler);
+    };
+
+    $("userEmail").textContent = currentUser.email || "";
+    $("welcomeRole").textContent = session.profile.role || "";
+
+    const bankSection = $("bankSection");
+    if (bankSection && !isAdmin) {
+      bankSection.style.display = "none";
+    }
+
+    $("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+
+    $("menuToggle").addEventListener("click", () => {
+      $("sidebar").classList.toggle("open");
+    });
+
+    const money = value =>
+      "KES " + Number(value || 0).toLocaleString("en-KE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+    function num(value) {
+      if (value === "" || value == null) return 0;
+
+      let text = String(value).trim();
+      const negative =
+        /^\(.*\)$/.test(text) || text.endsWith("-");
+
+      text = text.replace(/,/g, "");
+      text = text.replace(/[^\d.-]/g, "");
+
+      const result = Number(text);
+      if (!Number.isFinite(result)) return 0;
+
+      return negative ? -Math.abs(result) : result;
+    }
+
+    function normalizeKey(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+    }
+
+    function cell(row, names) {
+      const wanted = names.map(normalizeKey);
+
+      for (const key of Object.keys(row)) {
+        if (wanted.includes(normalizeKey(key))) {
+          return row[key];
+        }
+      }
+      return "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function safeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    function showMessage(id, message, type = "") {
+      const element = $(id);
+      if (!element) return;
+      element.className =
+        "import-message " +
+        (type === "error" ? "import-error" :
+         type === "success" ? "import-success" : "");
+      element.textContent = message;
+    }
+
+    function downloadCsv(filename, lines) {
+      const blob = new Blob(
+        ["\uFEFF" + lines.join("\r\n")],
+        { type: "text/csv;charset=utf-8;" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function readSheet(file) {
+      const buffer = await file.arrayBuffer();
+      const book = XLSX.read(buffer, {
+        type: "array",
+        cellDates: true
+      });
+
+      const sheet = book.Sheets[book.SheetNames[0]];
+
+      return XLSX.utils.sheet_to_json(sheet, {
+        defval: "",
+        raw: true
+      });
+    }
+
+    function parseDate(value) {
+      if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+      }
+
+      if (
+        typeof value === "number" &&
+        value > 20000 &&
+        value < 80000
+      ) {
+        const parsedCode = XLSX.SSF.parse_date_code(value);
+        if (!parsedCode) return null;
+
+        return new Date(
+          parsedCode.y,
+          parsedCode.m - 1,
+          parsedCode.d,
+          parsedCode.H || 0,
+          parsedCode.M || 0,
+          Math.floor(parsedCode.S || 0)
+        );
+      }
+
+      const text = String(value || "").trim();
+      if (!text) return null;
+
+      const dmy = text.match(
+        /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/
+      );
+
+      if (dmy) {
+        let year = Number(dmy[3]);
+        if (year < 100) year += 2000;
+
+        const date = new Date(
+          year,
+          Number(dmy[2]) - 1,
+          Number(dmy[1]),
+          Number(dmy[4] || 0),
+          Number(dmy[5] || 0)
+        );
+
+        if (
+          date.getFullYear() !== year ||
+          date.getMonth() !== Number(dmy[2]) - 1 ||
+          date.getDate() !== Number(dmy[1])
+        ) return null;
+
+        return date;
+      }
+
+      const fallback = new Date(text);
+      return Number.isNaN(fallback.getTime()) ? null : fallback;
+    }
+
+    function formatDate(date) {
+      if (!date) return "";
+      return new Date(date).toLocaleDateString("en-GB");
+    }
+
+    function timeOf(value) {
+      if (!value) return 0;
+      if (typeof value.toDate === "function") {
+        return value.toDate().getTime();
+      }
+      if (value instanceof Date) return value.getTime();
+      return 0;
+    }
+
+    // =========================================================
+    // PRODUCTS
+    // =========================================================
+
+    $("templateBtn").addEventListener("click", () => {
+      downloadCsv("didge-products-template.csv", [
+        "name,category,size,barcode,cost,selling,stock",
+        "PRO ONE,Hockey Sticks,36.5,,4500,6500,4",
+        "PRO ONE,Hockey Sticks,37.5,,4500,6500,2",
+        "Mouth Guard,Accessories,,,300,800,20"
+      ]);
+    });
+
+    function buildProducts(rows) {
+      const groups = new Map();
+
+      rows.forEach(row => {
+        const name = String(
+          cell(row, ["name", "product", "product name", "item"])
+        ).trim();
+
+        if (!name) return;
+
+        const item = {
+          name,
+          category: String(
+            cell(row, ["category", "cat"]) || "Uncategorised"
+          ).trim(),
+          size: String(
+            cell(row, ["size", "variant", "length"]) || ""
+          ).trim(),
+          barcode: String(
+            cell(row, ["barcode", "sku", "code"]) || ""
+          ).trim(),
+          cost: num(cell(row, ["cost", "cost price", "unit cost"])),
+          selling: num(
+            cell(row, ["selling", "selling price", "price", "unit price"])
+          ),
+          stock: num(cell(row, ["stock", "qty", "quantity"]))
+        };
+
+        const key = name.toLowerCase();
+
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      });
+
+      const result = [];
+
+      groups.forEach(items => {
+        const sized = items.filter(item => item.size);
+
+        if (sized.length) {
+          const variants = [];
+
+          sized.forEach(item => {
+            const existing = variants.find(
+              v => v.size.toLowerCase() === item.size.toLowerCase()
+            );
+
+            if (existing) {
+              existing.stock += item.stock;
+              existing.cost = item.cost;
+              existing.selling = item.selling;
+              if (item.barcode) existing.barcode = item.barcode;
+            } else {
+              variants.push({
+                size: item.size,
+                cost: item.cost,
+                selling: item.selling,
+                stock: item.stock,
+                barcode: item.barcode
+              });
+            }
+          });
+
+          result.push({
+            name: items[0].name,
+            category: items[0].category,
+            hasVariants: true,
+            variants,
+            totalStock: variants.reduce(
+              (sum, item) => sum + item.stock, 0
+            )
+          });
+        } else {
+          const last = items[items.length - 1];
+
+          result.push({
+            name: last.name,
+            category: last.category,
+            hasVariants: false,
+            cost: last.cost,
+            selling: last.selling,
+            stock: last.stock,
+            totalStock: last.stock,
+            barcode: last.barcode
+          });
+        }
+      });
+
+      return result;
+    }
+
+    function showProductPreview() {
+      $("previewCard").style.display = "block";
+      $("previewBody").innerHTML = "";
+
+      parsed.slice(0, 20).forEach(product => {
+        const sizes = product.hasVariants
+          ? product.variants.map(v => v.size).join(", ")
+          : "-";
+
+        const selling = product.hasVariants
+          ? product.variants.map(v => money(v.selling)).join(", ")
+          : money(product.selling);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(product.name)}</strong></td>
+          <td>${escapeHtml(product.category)}</td>
+          <td>${escapeHtml(sizes)}</td>
+          <td>${product.totalStock}</td>
+          <td>${escapeHtml(selling)}</td>
+        `;
+
+        $("previewBody").appendChild(tr);
+      });
+
+      const withSizes = parsed.filter(p => p.hasVariants).length;
+
+      $("previewSummary").textContent =
+        `${parsed.length} products ready. ${withSizes} have sizes.`;
+
+      $("previewMore").textContent =
+        parsed.length > 20
+          ? `And ${parsed.length - 20} more products.`
+          : "";
+    }
+
+    $("fileInput").addEventListener("change", async event => {
+      const file = event.target.files[0];
+      event.target.value = "";
+
+      if (!file) return;
+
+      try {
+        parsed = buildProducts(await readSheet(file));
+
+        if (!parsed.length) {
+          $("previewCard").style.display = "none";
+          alert("No valid products found.");
+          return;
+        }
+
+        showProductPreview();
+      } catch (error) {
+        alert("Could not read product file: " + error.message);
+      }
+    });
+
+    $("saveBtn").addEventListener("click", async () => {
+      if (!parsed.length) return;
+
+      const replace = $("importMode").value === "update";
+
+      if (!confirm(
+        replace
+          ? "Update matching products and add new products?"
+          : "Add new products only?"
+      )) return;
+
+      const button = $("saveBtn");
+      button.disabled = true;
+      button.textContent = "Saving...";
+
+      try {
+        const snap = await getDocs(collection(db, "products"));
+        const byName = new Map();
+
+        snap.forEach(item => {
+          byName.set(
+            String(item.data().name || "").trim().toLowerCase(),
+            item.id
+          );
+        });
+
+        let batch = writeBatch(db);
+        let pending = 0;
+        let added = 0;
+        let updated = 0;
+        let skipped = 0;
+
+        async function flush() {
+          if (!pending) return;
+          await batch.commit();
+          batch = writeBatch(db);
+          pending = 0;
+        }
+
+        for (const product of parsed) {
+          const key = product.name.trim().toLowerCase();
+          const existingId = byName.get(key);
+
+          if (existingId && !replace) {
+            skipped++;
+            continue;
+          }
+
+          const ref = existingId
+            ? doc(db, "products", existingId)
+            : doc(collection(db, "products"));
+
+          const payload = {
+            ...product,
+            updatedAt: serverTimestamp()
+          };
+
+          if (!existingId) {
+            payload.createdAt = serverTimestamp();
+            byName.set(key, ref.id);
+          }
+
+          batch.set(ref, payload, { merge: true });
+          pending++;
+
+          if (existingId) updated++;
+          else added++;
+
+          if (pending >= 400) await flush();
+        }
+
+        await flush();
+
+        alert(
+          `Done. Added ${added}, updated ${updated}, skipped ${skipped}.`
+        );
+
+        if (isAdmin) await loadLinkedRecords();
+      } catch (error) {
+        alert("Product save failed: " + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Save Products";
+      }
+    });
+
+    // =========================================================
+    // LINKED RECORDS (customers, suppliers, products, expenses)
+    // =========================================================
+
+    function recordName(record, fallback) {
+      return String(
+        record.name ||
+        record.customerName ||
+        record.supplierName ||
+        record.productName ||
+        record.title ||
+        record.fullName ||
+        record.category ||
+        record.description ||
+        fallback
+      );
+    }
+
+    async function loadCollectionRecords(collectionName) {
+      const snap = await getDocs(collection(db, collectionName));
+
+      return snap.docs.map(item => ({
+        id: item.id,
+        ...item.data(),
+        displayName: recordName(item.data(), item.id)
+      }));
+    }
+
+    async function loadLinkedRecords() {
+      const results = await Promise.allSettled([
+        loadCollectionRecords("customers"),
+        loadCollectionRecords("suppliers"),
+        loadCollectionRecords("products"),
+        loadCollectionRecords("expenses")
+      ]);
+
+      const names = ["customers", "suppliers", "products", "expenses"];
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          if (index === 0) customers = result.value;
+          if (index === 1) suppliers = result.value;
+          if (index === 2) products = result.value;
+          if (index === 3) expenses = result.value;
+        } else {
+          console.error(
+            "Failed to load " + names[index],
+            result.reason
+          );
+        }
+      });
+
+      customers.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      suppliers.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      products.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+      const categorySet = new Set([
+        "Rent",
+        "Electricity",
+        "Water",
+        "Transport",
+        "Salaries",
+        "Internet",
+        "Repairs",
+        "Bank Charges",
+        "Office Supplies",
+        "Marketing",
+        "Other Expense"
+      ]);
+
+      expenses.forEach(expense => {
+        const category =
+          expense.category ||
+          expense.expenseCategory ||
+          expense.type;
+
+        if (category) categorySet.add(String(category));
+      });
+
+      expenseCategories = [...categorySet].sort();
+
+      if (statementRows.length) showStatement();
+    }
+
+    async function loadAccounts() {
+      const snap = await getDocs(collection(db, "accounts"));
+
+      accounts = snap.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }));
+
+      accounts.sort((a, b) =>
+        String(a.name || "").localeCompare(String(b.name || ""))
+      );
+
+      if (!accounts.length) {
+        $("statementAccount").innerHTML =
+          '<option value="">Add an account in Cash & Bank first</option>';
+        return;
+      }
+
+      $("statementAccount").innerHTML =
+        '<option value="">Select Account</option>' +
+        accounts.map(account => `
+          <option value="${safeAttr(account.id)}">
+            ${escapeHtml(account.name || account.id)}
+          </option>
+        `).join("");
+    }
+
+    on("statementTemplateBtn", "click", () => {
+      downloadCsv("didge-bank-statement-template.csv", [
+        [
+          "date",
+          "particulars",
+          "product",
+          "account",
+          "transaction type",
+          "customer/supplier/expense",
+          "money in",
+          "money out",
+          "reference"
+        ].join(","),
+        [
+          "25/10/2026",
+          "Hockey stick payment",
+          "PRO ONE",
+          "Equity Bank",
+          "customer",
+          "Customer A",
+          "6500",
+          "0",
+          "REF001"
+        ].join(","),
+        [
+          "26/10/2026",
+          "Stock purchase",
+          "PRO ONE",
+          "Equity Bank",
+          "supplier",
+          "Supplier A",
+          "0",
+          "12000",
+          "REF002"
+        ].join(","),
+        [
+          "27/10/2026",
+          "Electricity bill",
+          "",
+          "M-Pesa",
+          "expense",
+          "Electricity",
+          "0",
+          "2500",
+          "REF003"
+        ].join(",")
+      ]);
+    });
+
+    // =========================================================
+    // BANK STATEMENT PARSING
+    // =========================================================
+
+    function normalizeType(value) {
+      const type = String(value || "").toLowerCase().trim();
+
+      if (type.includes("customer")) return "customer";
+      if (type.includes("supplier")) return "supplier";
+      if (type.includes("expense")) return "expense";
+      if (type.includes("transfer")) return "transfer";
+      return "other";
+    }
+
+    function detectType(details) {
+      const text = String(details || "").toLowerCase();
+
+      if (/transfer|own account|funds movement/.test(text)) {
+        return "transfer";
+      }
+
+      if (
+        /rent|electricity|water bill|internet|salary|bank charge|fee/.test(text)
+      ) {
+        return "expense";
+      }
+
+      if (/supplier|stock purchase|wholesale/.test(text)) {
+        return "supplier";
+      }
+
+      if (
+        /customer|sale|sales receipt|customer payment/.test(text)
+      ) {
+        return "customer";
+      }
+
+      return "other";
+    }
+
+    function buildStatement(rows) {
+      const lines = [];
+
+      rows.forEach((row, sourceIndex) => {
+        const details = String(cell(row, [
+          "description",
+          "narration",
+          "details",
+          "transaction details",
+          "particulars",
+          "particular",
+          "memo",
+          "narrative"
+        ]) || "").trim();
+
+        const date = parseDate(cell(row, [
+          "date",
+          "trans date",
+          "transaction date",
+          "completion time",
+          "value date",
+          "posted date",
+          "posting date"
+        ]));
+
+        let moneyIn = Math.abs(num(cell(row, [
+          "credit",
+          "paid in",
+          "deposit",
+          "money in",
+          "cr",
+          "in"
+        ])));
+
+        let moneyOut = Math.abs(num(cell(row, [
+          "debit",
+          "withdrawn",
+          "withdrawal",
+          "paid out",
+          "money out",
+          "dr",
+          "out"
+        ])));
+
+        if (!moneyIn && !moneyOut) {
+          const amount = num(cell(row, ["amount", "value"]));
+          const kind = String(cell(row, [
+            "type",
+            "dr/cr",
+            "credit/debit"
+          ]) || "").toLowerCase();
+
+          if (/credit|cr|deposit/.test(kind)) {
+            moneyIn = Math.abs(amount);
+          } else if (/debit|dr|withdrawal/.test(kind)) {
+            moneyOut = Math.abs(amount);
+          } else if (amount > 0) {
+            moneyIn = amount;
+          } else if (amount < 0) {
+            moneyOut = Math.abs(amount);
+          }
+        }
+
+        if (
+          /opening balance|closing balance|brought forward|balance b\/f/i
+            .test(details)
+        ) return;
+
+        if (!date || (!moneyIn && !moneyOut)) return;
+
+        const suppliedType = cell(row, [
+          "transaction type",
+          "transaction category",
+          "category"
+        ]);
+
+        const type = suppliedType
+          ? normalizeType(suppliedType)
+          : detectType(details);
+
+        lines.push({
+          sourceIndex,
+          date,
+          details: details || "Bank transaction",
+          productText: String(cell(row, [
+            "product",
+            "product name",
+            "item"
+          ]) || "").trim(),
+          accountText: String(cell(row, [
+            "account",
+            "account name",
+            "bank account"
+          ]) || "").trim(),
+          type,
+          partyText: String(cell(row, [
+            "customer/supplier/expense",
+            "customer supplier expense",
+            "customer",
+            "supplier",
+            "expense category",
+            "party",
+            "payee",
+            "payer"
+          ]) || "").trim(),
+          reference: String(cell(row, [
+            "reference",
+            "ref",
+            "receipt",
+            "receipt no.",
+            "receipt no",
+            "transaction id"
+          ]) || "").trim(),
+          moneyIn,
+          moneyOut,
+          productId: "",
+          linkedId: "",
+          expenseCategory: "",
+          partyName: "",
+          linkedAccountId: "",
+          linkedAccountName: ""
+        });
+      });
+
+      lines.sort((a, b) =>
+        a.date - b.date || a.sourceIndex - b.sourceIndex
+      );
+
+      return lines;
+    }
+
+    function matchRecord(records, text) {
+      if (!text) return null;
+
+      const target = String(text).trim().toLowerCase();
+
+      return records.find(record =>
+        record.displayName.toLowerCase() === target
+      ) || null;
+    }
+
+    function matchAccount(text) {
+      if (!text) return null;
+
+      return accounts.find(account =>
+        String(account.name || "").toLowerCase() ===
+        String(text).toLowerCase()
+      ) || null;
+    }
+
+    function initialiseStatementLinks() {
+      const selectedAccount = accounts.find(
+        account => account.id === $("statementAccount").value
+      );
+
+      statementRows.forEach(line => {
+        const product = matchRecord(products, line.productText);
+        if (product) line.productId = product.id;
+
+        const account = matchAccount(line.accountText) || selectedAccount;
+
+        if (account) {
+          line.linkedAccountId = account.id;
+          line.linkedAccountName = account.name;
+        }
+
+        if (line.type === "customer") {
+          const customer = matchRecord(customers, line.partyText);
+          if (customer) {
+            line.linkedId = customer.id;
+            line.partyName = customer.displayName;
+          }
+        }
+
+        if (line.type === "supplier") {
+          const supplier = matchRecord(suppliers, line.partyText);
+          if (supplier) {
+            line.linkedId = supplier.id;
+            line.partyName = supplier.displayName;
+          }
+        }
+
+        if (line.type === "expense") {
+          const category = expenseCategories.find(item =>
+            item.toLowerCase() === line.partyText.toLowerCase()
+          );
+
+          line.expenseCategory = category || line.partyText;
+        }
+
+        if (line.type === "other" || line.type === "transfer") {
+          line.partyName = line.partyText;
+        }
+      });
+    }
+
+    // =========================================================
+    // DROPDOWN HELPERS
+    // =========================================================
+
+    function optionsFromRecords(records, selectedId) {
+      return '<option value="">Not linked</option>' +
+        records.map(record => `
+          <option value="${safeAttr(record.id)}"
+            ${record.id === selectedId ? "selected" : ""}>
+            ${escapeHtml(record.displayName)}
+          </option>
+        `).join("");
+    }
+
+    function productOptions(selectedId) {
+      return optionsFromRecords(products, selectedId);
+    }
+
+    function accountOptions(selectedId) {
+      return '<option value="">Select Account</option>' +
+        accounts.map(account => `
+          <option value="${safeAttr(account.id)}"
+            ${account.id === selectedId ? "selected" : ""}>
+            ${escapeHtml(account.name || account.id)}
+          </option>
+        `).join("");
+    }
+
+    function partyEditor(line, index) {
+      if (line.type === "customer") {
+        return `
+          <select class="import-input"
+            data-index="${index}" data-field="linkedId">
+            ${optionsFromRecords(customers, line.linkedId)}
+          </select>
+        `;
+      }
+
+      if (line.type === "supplier") {
+        return `
+          <select class="import-input"
+            data-index="${index}" data-field="linkedId">
+            ${optionsFromRecords(suppliers, line.linkedId)}
+          </select>
+        `;
+      }
+
+      if (line.type === "expense") {
+        const list = [...expenseCategories];
+        if (
+          line.expenseCategory &&
+          !list.some(c => c.toLowerCase() === line.expenseCategory.toLowerCase())
+        ) {
+          list.push(line.expenseCategory);
+        }
+
+        const options = list.map(category => `
+          <option value="${safeAttr(category)}"
+            ${category.toLowerCase() === String(line.expenseCategory || "").toLowerCase() ? "selected" : ""}>
+            ${escapeHtml(category)}
+          </option>
+        `).join("");
+
+        return `
+          <select class="import-input"
+            data-index="${index}" data-field="expenseCategory">
+            <option value="">Select Expense</option>
+            ${options}
+          </select>
+          <input class="import-input"
+            style="margin-top:5px;"
+            placeholder="Or enter category"
+            data-index="${index}"
+            data-field="customExpense"
+            value="">
+        `;
+      }
+
+      return `
+        <input class="import-input"
+          data-index="${index}"
+          data-field="partyName"
+          placeholder="Name / Details"
+          value="${safeAttr(line.partyName || line.partyText)}">
+      `;
+    }
+
+    function typeOptions(type) {
+      const types = [
+        ["customer", "Customer"],
+        ["supplier", "Supplier"],
+        ["expense", "Expense"],
+        ["transfer", "Transfer"],
+        ["other", "Other"]
+      ];
+
+      return types.map(([value, label]) => `
+        <option value="${value}"
+          ${type === value ? "selected" : ""}>
+          ${label}
+        </option>
+      `).join("");
+    }
+
+    // =========================================================
+    // STATEMENT PREVIEW
+    // =========================================================
+
+    function filteredStatementIndices() {
+      const search = $("statementSearch").value.toLowerCase().trim();
+      const type = $("statementTypeFilter").value;
+
+      return statementRows
+        .map((line, index) => ({ line, index }))
+        .filter(({ line }) => {
+          const matchesType = !type || line.type === type;
+          const matchesSearch =
+            !search ||
+            [
+              line.details,
+              line.reference,
+              line.partyName,
+              line.partyText,
+              line.productText
+            ].some(value =>
+              String(value || "").toLowerCase().includes(search)
+            );
+
+          return matchesType && matchesSearch;
+        })
+        .map(item => item.index);
+    }
+
+    function showStatement() {
+      $("statementPreview").style.display = "block";
+
+      const totalIn = statementRows.reduce(
+        (sum, line) => sum + line.moneyIn, 0
+      );
+      const totalOut = statementRows.reduce(
+        (sum, line) => sum + line.moneyOut, 0
+      );
+
+      $("statementCount").textContent = statementRows.length;
+      $("statementIn").textContent = money(totalIn);
+      $("statementOut").textContent = money(totalOut);
+      $("statementNet").textContent = money(totalIn - totalOut);
+
+      $("statementSummary").textContent =
+        `${statementRows.length} transactions loaded. ` +
+        "Review their classifications and linked records before saving.";
+
+      const indices = filteredStatementIndices();
+      const pages = Math.max(1, Math.ceil(indices.length / PAGE_SIZE));
+
+      statementPage = Math.min(statementPage, pages - 1);
+
+      const start = statementPage * PAGE_SIZE;
+      const visible = indices.slice(start, start + PAGE_SIZE);
+
+      $("statementBody").innerHTML = visible.map(index => {
+        const line = statementRows[index];
+
+        return `
+          <tr>
+            <td>
+              <input type="date" class="import-input"
+                data-index="${index}" data-field="date"
+                value="${line.date.getFullYear()}-${String(
+                  line.date.getMonth() + 1
+                ).padStart(2, "0")}-${String(
+                  line.date.getDate()
+                ).padStart(2, "0")}">
+            </td>
+
+            <td>
+              <input class="import-input"
+                data-index="${index}" data-field="details"
+                value="${safeAttr(line.details)}">
+            </td>
+
+            <td>
+              <select class="import-input"
+                data-index="${index}" data-field="productId">
+                ${productOptions(line.productId)}
+              </select>
+            </td>
+
+            <td>
+              <select class="import-input"
+                data-index="${index}" data-field="linkedAccountId">
+                ${accountOptions(line.linkedAccountId)}
+              </select>
+            </td>
+
+            <td>
+              <select class="import-input"
+                data-index="${index}" data-field="type">
+                ${typeOptions(line.type)}
+              </select>
+            </td>
+
+            <td>${partyEditor(line, index)}</td>
+
+            <td>
+              <input type="number" step="0.01" min="0"
+                class="import-input money-in"
+                data-index="${index}" data-field="moneyIn"
+                value="${line.moneyIn}">
+            </td>
+
+            <td>
+              <input type="number" step="0.01" min="0"
+                class="import-input money-out"
+                data-index="${index}" data-field="moneyOut"
+                value="${line.moneyOut}">
+            </td>
+
+            <td>
+              <input class="import-input"
+                data-index="${index}" data-field="reference"
+                value="${safeAttr(line.reference)}">
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      $("statementMore").textContent =
+        `${indices.length} matching transactions`;
+
+      $("statementPageLabel").textContent =
+        `Page ${statementPage + 1} of ${pages}`;
+
+      $("previousStatementPage").disabled = statementPage === 0;
+      $("nextStatementPage").disabled = statementPage >= pages - 1;
+    }
+
+    // UPDATE PREVIEW ROW DATA
+
+    on("statementBody", "change", event => {
+      const input = event.target;
+      const index = Number(input.dataset.index);
+      const field = input.dataset.field;
+
+      if (!Number.isInteger(index) || !statementRows[index]) return;
+
+      const line = statementRows[index];
+
+      if (field === "date") {
+        const parts = input.value.split("-").map(Number);
+        if (parts.length === 3) {
+          line.date = new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+      } else if (field === "moneyIn" || field === "moneyOut") {
+        line[field] = Math.max(0, num(input.value));
+      } else if (field === "customExpense") {
+        line.expenseCategory = input.value.trim();
+      } else if (field === "type") {
+        line.type = input.value;
+        line.linkedId = "";
+        line.expenseCategory = "";
+        line.partyName = "";
+      } else if (field === "linkedAccountId") {
+        line.linkedAccountId = input.value;
+        const account = accounts.find(a => a.id === input.value);
+        line.linkedAccountName = account ? account.name : "";
+      } else {
+        line[field] = input.value;
+      }
+
+      if (field === "linkedId") {
+        const records = line.type === "customer"
+          ? customers : suppliers;
+        const selected = records.find(r => r.id === line.linkedId);
+        line.partyName = selected ? selected.displayName : "";
+      }
+
+      if (field === "productId") {
+        const selected = products.find(p => p.id === line.productId);
+        line.productText = selected ? selected.displayName : "";
+      }
+
+      if (
+        field === "type" ||
+        field === "moneyIn" ||
+        field === "moneyOut"
+      ) {
+        showStatement();
+      }
+    });
+
+    on("statementSearch", "input", () => {
+      statementPage = 0;
+      showStatement();
+    });
+
+    on("statementTypeFilter", "change", () => {
+      statementPage = 0;
+      showStatement();
+    });
+
+    on("previousStatementPage", "click", () => {
+      if (statementPage > 0) {
+        statementPage--;
+        showStatement();
+      }
+    });
+
+    on("nextStatementPage", "click", () => {
+      const pages = Math.ceil(
+        filteredStatementIndices().length / PAGE_SIZE
+      );
+
+      if (statementPage < pages - 1) {
+        statementPage++;
+        showStatement();
+      }
+    });
+
+    // UPLOAD STATEMENT
+
+    on("statementFile", "change", async event => {
+      const file = event.target.files[0];
+      event.target.value = "";
+
+      if (!file) return;
+
+      if (!$("statementAccount").value) {
+        alert("Select the bank or M-Pesa account first.");
+        return;
+      }
+
+      try {
+        const rows = await readSheet(file);
+        statementRows = buildStatement(rows);
+
+        if (!statementRows.length) {
+          $("statementPreview").style.display = "none";
+          alert("No valid statement transactions found.");
+          return;
+        }
+
+        initialiseStatementLinks();
+
+        statementPage = 0;
+        $("statementSearch").value = "";
+        $("statementTypeFilter").value = "";
+
+        showStatement();
+
+        showMessage(
+          "statementMessage",
+          "Statement loaded. Review every transaction before saving.",
+          "success"
+        );
+      } catch (error) {
+        alert("Statement import failed: " + error.message);
+      }
+    });
+
+    // =========================================================
+    // SAVE STATEMENT
+    // Each line is saved once:
+    //   customer money in   -> customer_payments (Customers + Cash & Bank both read it)
+    //   supplier money out  -> supplier_payments
+    //   expense money out   -> expenses
+    //   everything else     -> cash_adjustments (moves the account only)
+    // Sales records are never changed here.
+    // =========================================================
+
+    function statementLineKey(line) {
+      const date = [
+        line.date.getFullYear(),
+        String(line.date.getMonth() + 1).padStart(2, "0"),
+        String(line.date.getDate()).padStart(2, "0")
+      ].join("-");
+
+      return [
+        line.linkedAccountId,
+        date,
+        line.reference.trim().toLowerCase(),
+        line.details.trim().toLowerCase(),
+        line.moneyIn.toFixed(2),
+        line.moneyOut.toFixed(2)
+      ].join("|");
+    }
+
+    // Returns null when everything is fine, otherwise { index, message }
+    function validateStatement() {
+      if (!statementRows.length) {
+        return { index: -1, message: "No statement transactions to save." };
+      }
+
+      for (let i = 0; i < statementRows.length; i++) {
+        const line = statementRows[i];
+        const fail = text => ({
+          index: i,
+          message: `Transaction ${i + 1}: ${text}`
+        });
+
+        if (!line.linkedAccountId) return fail("Select an account.");
+
+        if (!(line.date instanceof Date) || Number.isNaN(line.date.getTime())) {
+          return fail("Invalid date.");
+        }
+
+        if (!line.details.trim()) return fail("Particulars are required.");
+
+        if (
+          !Number.isFinite(line.moneyIn) ||
+          !Number.isFinite(line.moneyOut) ||
+          line.moneyIn < 0 ||
+          line.moneyOut < 0 ||
+          (!line.moneyIn && !line.moneyOut)
+        ) {
+          return fail("Invalid money amount.");
+        }
+
+        if (line.moneyIn && line.moneyOut) {
+          return fail("Money In and Money Out cannot both have an amount.");
+        }
+
+        if (line.type === "customer" && !line.linkedId) {
+          return fail(
+            customers.length
+              ? "Choose the customer."
+              : "Choose the customer. No customers were found, so add them on the Customers page first."
+          );
+        }
+
+        if (line.type === "supplier" && !line.linkedId) {
+          return fail(
+            suppliers.length
+              ? "Choose the supplier."
+              : "Choose the supplier. No suppliers were found, so add them on the Suppliers page first."
+          );
+        }
+
+        if (line.type === "expense" && !String(line.expenseCategory || "").trim()) {
+          return fail("Select an expense category.");
+        }
+      }
+
+      return null;
+    }
+
+    // Shows the page that holds the problem row and highlights it
+    function jumpToRow(index) {
+      if (index < 0) return;
+
+      $("statementSearch").value = "";
+      $("statementTypeFilter").value = "";
+      statementPage = Math.floor(index / PAGE_SIZE);
+      showStatement();
+
+      const field = document.querySelector(
+        `#statementBody [data-index="${index}"]`
+      );
+
+      if (field) {
+        const row = field.closest("tr");
+        row.style.outline = "2px solid #dc2626";
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    on("saveStatementBtn", "click", async () => {
+      const problem = validateStatement();
+
+      if (problem) {
+        jumpToRow(problem.index);
+        showMessage("statementMessage", problem.message, "error");
+        alert(problem.message);
+        return;
+      }
+
+      if (!confirm(
+        `Save ${statementRows.length} bank transactions?\n\n` +
+        "This updates Cash & Bank, customer balances and supplier balances.\n" +
+        "Product stock will not change."
+      )) return;
+
+      const button = $("saveStatementBtn");
+      button.disabled = true;
+      button.textContent = "Saving...";
+
+      try {
+        // Lines that were saved before are skipped
+        const accountIds = [
+          ...new Set(statementRows.map(line => line.linkedAccountId))
+        ];
+
+        const seen = new Set();
+
+        for (const accountId of accountIds) {
+          const existing = await getDocs(query(
+            collection(db, "statement_lines"),
+            where("accountId", "==", accountId)
+          ));
+
+          existing.forEach(item => {
+            const data = item.data();
+            if (data.lineKey) seen.add(data.lineKey);
+          });
+        }
+
+        let batch = writeBatch(db);
+        let pending = 0;
+        const counts = {
+          added: 0,
+          skipped: 0,
+          customers: 0,
+          suppliers: 0,
+          expenses: 0,
+          accountOnly: 0
+        };
+        const occurrence = {};
+
+        async function flush() {
+          if (!pending) return;
+          await batch.commit();
+          batch = writeBatch(db);
+          pending = 0;
+        }
+
+        for (const line of statementRows) {
+          // A line is never split across two batches
+          if (pending >= 480) await flush();
+
+          // Identical lines in one file are counted separately.
+          // The first one keeps the plain key, so older saves still match.
+          const base = statementLineKey(line);
+          occurrence[base] = (occurrence[base] || 0) + 1;
+          const lineKey = occurrence[base] === 1
+            ? base
+            : base + "|#" + occurrence[base];
+
+          if (seen.has(lineKey)) {
+            counts.skipped++;
+            continue;
+          }
+          seen.add(lineKey);
+
+          const product = products.find(item => item.id === line.productId);
+          const account = accounts.find(item => item.id === line.linkedAccountId);
+          const accountName = account ? account.name : (line.linkedAccountName || "");
+
+          const records =
+            line.type === "customer" ? customers :
+            line.type === "supplier" ? suppliers : [];
+
+          const party = records.find(item => item.id === line.linkedId);
+          const partyName = party
+            ? party.displayName
+            : (line.partyName || line.partyText || "");
+
+          const when = Timestamp.fromDate(line.date);
+          const who = currentUser.email || "";
+          let applied = false;
+
+          if (line.type === "customer" && line.moneyIn > 0 && party) {
+            // Customers page lowers the balance, Cash & Bank adds the money in
+            batch.set(doc(collection(db, "customer_payments")), {
+              customerId: party.id,
+              customerName: partyName,
+              amount: line.moneyIn,
+              accountId: line.linkedAccountId,
+              accountName,
+              method: accountName,
+              reference: line.reference || null,
+              note: line.details,
+              source: "bank_statement",
+              statementLineKey: lineKey,
+              userEmail: who,
+              createdAt: when
+            });
+            pending++;
+            counts.customers++;
+            applied = true;
+          } else if (line.type === "supplier" && line.moneyOut > 0 && party) {
+            batch.set(doc(collection(db, "supplier_payments")), {
+              supplierId: party.id,
+              supplierName: partyName,
+              amount: line.moneyOut,
+              method: accountName,
+              accountName,
+              accountId: line.linkedAccountId,
+              reference: line.reference || null,
+              note: line.details,
+              source: "bank_statement",
+              statementLineKey: lineKey,
+              userEmail: who,
+              createdAt: when
+            });
+            pending++;
+            counts.suppliers++;
+            applied = true;
+          } else if (line.type === "expense" && line.moneyOut > 0) {
+            batch.set(doc(collection(db, "expenses")), {
+              category: line.expenseCategory || "Other",
+              amount: line.moneyOut,
+              accountName,
+              note: line.details + (line.reference ? " [" + line.reference + "]" : ""),
+              source: "bank_statement",
+              statementLineKey: lineKey,
+              userEmail: who,
+              createdAt: when,
+              updatedAt: serverTimestamp()
+            });
+            pending++;
+            counts.expenses++;
+            applied = true;
+          }
+
+          // Transfers, other lines and refunds still move the account balance
+          if (!applied) {
+            const isIn = line.moneyIn > 0;
+            const label = {
+              customer: "Customer refund",
+              supplier: "Supplier refund",
+              expense: "Expense",
+              transfer: "Transfer",
+              other: "Statement"
+            }[line.type] || "Statement";
+
+            batch.set(doc(collection(db, "cash_adjustments")), {
+              accountId: line.linkedAccountId,
+              accountName,
+              direction: isIn ? "in" : "out",
+              amount: isIn ? line.moneyIn : line.moneyOut,
+              reason: label + ": " + line.details,
+              reference: line.reference || null,
+              source: "bank_statement",
+              statementLineKey: lineKey,
+              userEmail: who,
+              createdAt: when
+            });
+            pending++;
+            counts.accountOnly++;
+          }
+
+          // The statement record itself
+          batch.set(doc(collection(db, "statement_lines")), {
+            accountId: line.linkedAccountId,
+            accountName,
+            date: when,
+            details: line.details,
+            particulars: line.details,
+            reference: line.reference || null,
+            productId: product ? product.id : null,
+            productName: product ? product.displayName : (line.productText || null),
+            transactionType: line.type,
+            linkedId: party ? party.id : null,
+            linkedName: partyName || null,
+            customerId: line.type === "customer" ? (line.linkedId || null) : null,
+            supplierId: line.type === "supplier" ? (line.linkedId || null) : null,
+            expenseCategory: line.type === "expense" ? line.expenseCategory : null,
+            moneyIn: line.moneyIn,
+            moneyOut: line.moneyOut,
+            lineKey,
+            importSource: "bank_statement",
+            appliedToBooks: true,
+            userEmail: who,
+            createdAt: serverTimestamp()
+          });
+          pending++;
+          counts.added++;
+        }
+
+        await flush();
+
+        const summary = counts.added
+          ? `Saved ${counts.added} transactions (${counts.skipped} duplicates skipped). ` +
+            `Customer payments: ${counts.customers}. Supplier payments: ${counts.suppliers}. ` +
+            `Expenses: ${counts.expenses}. Account movements only: ${counts.accountOnly}.`
+          : `Nothing new to save. All ${counts.skipped} transactions were already saved.`;
+
+        statementRows = [];
+        $("statementPreview").style.display = "none";
+        $("statementMessage").textContent = "";
+        $("statementMessage").className = "";
+
+        await loadLinkedRecords();
+        await loadSavedStatements();
+        await compareSelected();
+
+        showMessage("savedStatementMessage", summary, "success");
+        $("savedStatementMessage").scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+        alert(summary);
+
+      } catch (error) {
+        const denied =
+          error &&
+          (error.code === "permission-denied" ||
+            /permission/i.test(error.message || ""));
+
+        const text = denied
+          ? "Firestore refused the save. Add rules for customers, customer_payments and statement_lines, and check cash_adjustments, supplier_payments and expenses, then try again. Nothing from this save was written."
+          : "Save failed: " + error.message;
+
+        showMessage("statementMessage", text, "error");
+        $("statementMessage").scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+        alert(text);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Save Statement";
+      }
+    });
+
+    // =========================================================
+    // VIEW SAVED BANK STATEMENTS
+    // =========================================================
+
+    async function loadSavedStatements() {
+      const accountId = $("statementAccount").value;
+
+      if (!accountId) {
+        $("savedStatementBody").innerHTML = "";
+        $("savedStatementMore").textContent = "";
+        return;
+      }
+
+      try {
+        const snap = await getDocs(query(
+          collection(db, "statement_lines"),
+          where("accountId", "==", accountId)
+        ));
+
+        const lines = snap.docs.map(item => ({
+          id: item.id,
+          ...item.data()
+        }));
+
+        lines.sort((a, b) => timeOf(b.date) - timeOf(a.date));
+
+        $("savedStatementBody").innerHTML =
+          lines.slice(0, 100).map(line => {
+            const date = line.date?.toDate
+              ? formatDate(line.date.toDate())
+              : "";
+
+            const party =
+              line.expenseCategory ||
+              line.linkedName ||
+              "-";
+
+            return `
+              <tr>
+                <td>${escapeHtml(date)}</td>
+                <td>${escapeHtml(
+                  line.particulars || line.details || ""
+                )}</td>
+                <td>${escapeHtml(line.productName || "-")}</td>
+                <td>${escapeHtml(line.accountName || "-")}</td>
+                <td>
+                  <span class="status-pill">
+                    ${escapeHtml(line.transactionType || "Other")}
+                  </span>
+                </td>
+                <td>${escapeHtml(party)}</td>
+                <td class="money-in">
+                  ${line.moneyIn ? money(line.moneyIn) : "-"}
+                </td>
+                <td class="money-out">
+                  ${line.moneyOut ? money(line.moneyOut) : "-"}
+                </td>
+              </tr>
+            `;
+          }).join("");
+
+        if (!lines.length) {
+          $("savedStatementBody").innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align:center;">
+                No saved transactions for this account.
+              </td>
+            </tr>
+          `;
+        }
+
+        $("savedStatementMore").textContent =
+          lines.length > 100
+            ? `Showing the latest 100 of ${lines.length} transactions.`
+            : `${lines.length} saved transactions.`;
+
+      } catch (error) {
+        showMessage(
+          "savedStatementMessage",
+          "Could not load saved transactions: " + error.message,
+          "error"
+        );
+      }
+    }
+
+    on("refreshStatements", "click", loadSavedStatements);
+
+    // =========================================================
+    // COMPARE STATEMENT WITH SYSTEM
+    // Uses the same rules as Cash & Bank:
+    //   sales = amount paid only (Credit sales add nothing),
+    //   plus customer payments, supplier payments, expenses,
+    //   transfers and adjustments.
+    // =========================================================
+
+    async function compareSelected() {
+      const account = accounts.find(
+        item => item.id === $("statementAccount").value
+      );
+
+      if (!account) {
+        $("compareCard").style.display = "none";
+        return;
+      }
+
+      try {
+        const linesSnap = await getDocs(query(
+          collection(db, "statement_lines"),
+          where("accountId", "==", account.id)
+        ));
+
+        if (linesSnap.empty) {
+          $("compareCard").style.display = "none";
+          return;
+        }
+
+        const lines = linesSnap.docs.map(item => item.data());
+        const times = lines.map(line => timeOf(line.date)).filter(Boolean);
+
+        if (!times.length) {
+          $("compareCard").style.display = "none";
+          return;
+        }
+
+        const start = Math.min(...times);
+        // include the whole last day
+        const end = Math.max(...times) + 86399999;
+
+        const statementNet = lines.reduce(
+          (sum, line) =>
+            sum + Number(line.moneyIn || 0) - Number(line.moneyOut || 0),
+          0
+        );
+
+        const [
+          salesSnap,
+          custPaySnap,
+          paySnap,
+          expenseSnap,
+          transferSnap,
+          adjustSnap
+        ] = await Promise.all([
+          getDocs(collection(db, "sales")),
+          getDocs(collection(db, "customer_payments")),
+          getDocs(collection(db, "supplier_payments")),
+          getDocs(collection(db, "expenses")),
+          getDocs(collection(db, "transfers")),
+          getDocs(collection(db, "cash_adjustments"))
+        ]);
+
+        let systemNet = 0;
+
+        const inRange = value => {
+          const time = timeOf(value);
+          return time >= start && time <= end;
+        };
+
+        salesSnap.forEach(item => {
+          const sale = item.data();
+
+          if (
+            sale.paymentMethod !== account.name ||
+            sale.paymentMethod === "Credit" ||
+            !inRange(sale.createdAt)
+          ) return;
+
+          const paid =
+            sale.amountPaid === undefined || sale.amountPaid === null
+              ? Number(sale.total || 0)
+              : Number(sale.amountPaid || 0);
+
+          systemNet += paid;
+        });
+
+        const adjustedPayments = new Set();
+        adjustSnap.forEach(item => {
+          const id = item.data().customerPaymentId;
+          if (id) adjustedPayments.add(id);
+        });
+
+        custPaySnap.forEach(item => {
+          const payment = item.data();
+
+          if (adjustedPayments.has(item.id)) return;
+          if ((payment.accountName || payment.method) !== account.name) return;
+          if (!inRange(payment.createdAt)) return;
+
+          systemNet += Number(payment.amount || 0);
+        });
+
+        paySnap.forEach(item => {
+          const payment = item.data();
+
+          if (payment.method === account.name && inRange(payment.createdAt)) {
+            systemNet -= Number(payment.amount || 0);
+          }
+        });
+
+        expenseSnap.forEach(item => {
+          const expense = item.data();
+
+          if (expense.accountName === account.name && inRange(expense.createdAt)) {
+            systemNet -= Number(expense.amount || 0);
+          }
+        });
+
+        transferSnap.forEach(item => {
+          const transfer = item.data();
+
+          if (!inRange(transfer.createdAt)) return;
+
+          if (transfer.toName === account.name) {
+            systemNet += Number(transfer.amount || 0);
+          }
+
+          if (transfer.fromName === account.name) {
+            systemNet -= Number(transfer.amount || 0);
+          }
+        });
+
+        adjustSnap.forEach(item => {
+          const adjustment = item.data();
+
+          if (
+            adjustment.accountName !== account.name ||
+            !inRange(adjustment.createdAt)
+          ) return;
+
+          if (adjustment.direction === "in") {
+            systemNet += Number(adjustment.amount || 0);
+          }
+
+          if (adjustment.direction === "out") {
+            systemNet -= Number(adjustment.amount || 0);
+          }
+        });
+
+        const difference = statementNet - systemNet;
+
+        $("compareCard").style.display = "block";
+        $("compareStatement").textContent = money(statementNet);
+        $("compareSystem").textContent = money(systemNet);
+        $("compareDiff").textContent = money(Math.abs(difference));
+
+        $("compareNote").textContent =
+          Math.abs(difference) < 1
+            ? "Statement and system movements match."
+            : difference > 0
+              ? "The statement has more money movement than your records for these dates."
+              : "Your records have more money movement than the statement for these dates.";
+
+      } catch (error) {
+        $("compareCard").style.display = "none";
+        console.error("Comparison failed:", error);
+      }
+    }
+
+    // ACCOUNT CHANGES
+
+    on("statementAccount", "change", async () => {
+      const account = accounts.find(
+        item => item.id === $("statementAccount").value
+      );
+
+      if (statementRows.length) {
+        statementRows.forEach(line => {
+          line.linkedAccountId = account?.id || "";
+          line.linkedAccountName = account?.name || "";
+        });
+        showStatement();
+      }
+
+      await loadSavedStatements();
+      await compareSelected();
+    });
+
+    // INITIALISE ADMIN FEATURES
+
+    if (isAdmin) {
+      try {
+        await loadAccounts();
+        await loadLinkedRecords();
+      } catch (error) {
+        console.error("Import setup failed:", error);
+        alert("Could not load import data: " + error.message);
+      }
+    }
+
+  </script>
+</body>
+</html>

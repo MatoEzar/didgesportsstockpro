@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+  <script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cash & Bank | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Cash & Bank</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info"><span id="userEmail">Loading...</span></div>
+    </header>
+
+    <section class="page-content">
+      <div class="actions-bar">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn-primary" id="addAccountBtn" data-roles="admin">+ Add account</button>
+          <button class="btn-secondary" id="transferBtn">Transfer</button>
+          <button class="btn-secondary" id="adjustBtn">Adjust balance</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="accountCards"></div>
+      <p id="mixedNote" class="empty-state" style="display:none; text-align:left; padding:16px 0;"></p>
+
+      <div class="table-card" style="margin-top:10px;">
+        <div class="actions-bar" style="padding:15px 16px 0; margin-bottom:10px;">
+          <h3 style="color:#1e3c72;">Statement</h3>
+          <select id="filterAccount" style="padding:10px 12px; border:1px solid #ddd; border-radius:8px;">
+            <option value="">All accounts</option>
+          </select>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Account</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th>In</th>
+              <th>Out</th>
+              <th>By</th>
+            </tr>
+          </thead>
+          <tbody id="statementBody"></tbody>
+        </table>
+        <p id="noRows" class="empty-state" style="display:none;">No movements yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="accountModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="accountModalTitle">Add account</h2>
+        <button class="close-btn" data-close="accountModal">&times;</button>
+      </div>
+      <form id="accountForm">
+        <input type="hidden" id="editingAccountId" value="">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="accountName" placeholder="e.g. Equity Bank" required>
+        </div>
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="accountType" required>
+            <option value="Cash">Cash</option>
+            <option value="Till">Till</option>
+            <option value="Bank">Bank</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Opening balance (KES)</label>
+          <input type="number" id="openingBalance" min="0" step="0.01" value="0">
+          <small style="color:#666;">Only used when creating a new account.</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="accountModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="transferModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Transfer</h2>
+        <button class="close-btn" data-close="transferModal">&times;</button>
+      </div>
+      <form id="transferForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>From *</label>
+            <select id="fromAccount" required></select>
+          </div>
+          <div class="form-group">
+            <label>To *</label>
+            <select id="toAccount" required></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Amount (KES) *</label>
+          <input type="number" id="transferAmount" min="1" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="transferNote">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="transferModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="adjustModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Adjust balance</h2>
+        <button class="close-btn" data-close="adjustModal">&times;</button>
+      </div>
+      <form id="adjustForm">
+        <div class="form-group">
+          <label>Account *</label>
+          <select id="adjustAccount" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Direction *</label>
+            <select id="adjustDir">
+              <option value="in">Add money</option>
+              <option value="out">Remove money</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount (KES) *</label>
+            <input type="number" id="adjustAmount" min="1" step="0.01" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason *</label>
+          <input type="text" id="adjustReason" required placeholder="Opening cash, correction, owner deposit">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="adjustModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "../js/firebase-config.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import {
+      collection, getDocs, addDoc, updateDoc, doc, deleteDoc,
+      query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    let currentUser = null;
+    let isAdmin = false;
+    let accounts = [];
+    let sales = [];
+    let supplierPayments = [];
+    let customerPayments = [];
+    let expenses = [];
+    let transfers = [];
+    let adjustments = [];
+
+    const money = (n) => "KES " + Number(n || 0).toLocaleString();
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const timeOf = (ts) => (ts && ts.toDate ? ts.toDate().getTime() : 0);
+
+    const session = await guard("cash");
+    currentUser = session.user;
+    isAdmin = session.profile.role === "admin";
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+    document.querySelectorAll("[data-close]").forEach((el) => {
+      el.addEventListener("click", () => {
+        document.getElementById(el.dataset.close).style.display = "none";
+      });
+    });
+
+    async function ensureDefaults() {
+      const snap = await getDocs(collection(db, "accounts"));
+      if (!snap.empty) return;
+      const defaults = [
+        { name: "Cash", type: "Cash" },
+        { name: "Till", type: "Till" },
+        { name: "Bank", type: "Bank" }
+      ];
+      for (const item of defaults) {
+        await addDoc(collection(db, "accounts"), {
+          ...item,
+          openingBalance: 0,
+          createdAt: serverTimestamp()
+        });
+      }
+    }
+
+    async function refresh() {
+      const [a, s, p, e, t, j, cp] = await Promise.all([
+        getDocs(collection(db, "accounts")),
+        getDocs(collection(db, "sales")),
+        getDocs(collection(db, "supplier_payments")),
+        getDocs(collection(db, "expenses")),
+        getDocs(collection(db, "transfers")),
+        getDocs(collection(db, "cash_adjustments")),
+        getDocs(collection(db, "customer_payments"))
+      ]);
+      accounts = a.docs.map((d) => ({ id: d.id, ...d.data() }))
+        .sort((x, y) => String(x.name || "").localeCompare(String(y.name || "")));
+      sales = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+      supplierPayments = p.docs.map((d) => ({ id: d.id, ...d.data() }));
+      expenses = e.docs.map((d) => ({ id: d.id, ...d.data() }));
+      transfers = t.docs.map((d) => ({ id: d.id, ...d.data() }));
+      adjustments = j.docs.map((d) => ({ id: d.id, ...d.data() }));
+      customerPayments = cp.docs.map((d) => ({ id: d.id, ...d.data() }));
+      render();
+    }
+
+    function accountByName(name, exceptId) {
+      const key = String(name || "").trim().toLowerCase();
+      return accounts.find((a) =>
+        a.id !== exceptId && String(a.name || "").toLowerCase() === key
+      );
+    }
+
+    function saleAmountIn(sale) {
+      if (sale.amountPaid === undefined || sale.amountPaid === null) {
+        return Number(sale.total || 0);
+      }
+      return Number(sale.amountPaid || 0);
+    }
+
+    function saleDetails(sale) {
+      let text;
+      if (sale.items && sale.items.length) {
+        text = sale.items.map((i) =>
+          `${i.productName || ""}${i.variant ? " (" + i.variant + ")" : ""} × ${i.quantity}`
+        ).join(", ");
+      } else {
+        text = `${sale.productName || "Sale"}${sale.variant ? " (" + sale.variant + ")" : ""} × ${sale.quantity}`;
+      }
+      if (sale.customerName && sale.customerName !== "Walk-in") text += " · " + sale.customerName;
+      const total = Number(sale.total || 0);
+      const paid = saleAmountIn(sale);
+      if (paid < total) text += ` · paid ${money(paid)} of ${money(total)}`;
+      return text;
+    }
+
+    function linesFor(account) {
+      const name = account.name;
+      const rows = [];
+
+      sales.forEach((sale) => {
+        if (sale.paymentMethod === "Credit") return;
+        if (sale.paymentMethod !== name) return;
+        const paid = saleAmountIn(sale);
+        if (paid <= 0) return;
+        rows.push({
+          date: sale.createdAt, account: name, type: "Sale",
+          details: saleDetails(sale),
+          inn: paid, out: 0, by: sale.userEmail || "-"
+        });
+      });
+
+      const alreadyAsAdjustment = new Set(
+        adjustments.map((a) => a.customerPaymentId).filter(Boolean)
+      );
+      customerPayments.forEach((p) => {
+        if (alreadyAsAdjustment.has(p.id)) return;
+        if ((p.accountName || p.method) !== name) return;
+        rows.push({
+          date: p.createdAt || p.date, account: name, type: "Customer payment",
+          details: (p.customerName || "Customer") + (p.note ? " — " + p.note : ""),
+          inn: Number(p.amount || 0), out: 0, by: p.userEmail || "-"
+        });
+      });
+
+      supplierPayments.forEach((pay) => {
+        if (pay.method === name || pay.accountName === name) {
+          rows.push({
+            date: pay.createdAt, account: name, type: "Supplier payment",
+            details: (pay.supplierName || "Supplier") + (pay.note ? " — " + pay.note : ""),
+            inn: 0, out: Number(pay.amount || 0), by: pay.userEmail || "-"
+          });
+        }
+      });
+
+      expenses.forEach((ex) => {
+        if (ex.accountName === name) {
+          rows.push({
+            date: ex.createdAt, account: name, type: "Expense",
+            details: (ex.category || "Expense") + (ex.note ? " — " + ex.note : ""),
+            inn: 0, out: Number(ex.amount || 0), by: ex.userEmail || "-"
+          });
+        }
+      });
+
+      transfers.forEach((tr) => {
+        if (tr.fromName === name) {
+          rows.push({
+            date: tr.createdAt, account: name, type: "Transfer out",
+            details: "To " + tr.toName + (tr.note ? " — " + tr.note : ""),
+            inn: 0, out: Number(tr.amount || 0), by: tr.userEmail || "-"
+          });
+        }
+        if (tr.toName === name) {
+          rows.push({
+            date: tr.createdAt, account: name, type: "Transfer in",
+            details: "From " + tr.fromName + (tr.note ? " — " + tr.note : ""),
+            inn: Number(tr.amount || 0), out: 0, by: tr.userEmail || "-"
+          });
+        }
+      });
+
+      adjustments.forEach((adj) => {
+        if (adj.accountName === name || adj.accountId === account.id) {
+          const amount = Number(adj.amount || 0);
+          const type = adj.customerPaymentId ? "Customer payment"
+            : adj.source === "bank_statement" ? "Bank statement"
+            : "Adjustment";
+          rows.push({
+            date: adj.createdAt, account: name, type,
+            details: adj.reason || "-",
+            inn: adj.direction === "in" ? amount : 0,
+            out: adj.direction === "out" ? amount : 0,
+            by: adj.userEmail || "-"
+          });
+        }
+      });
+
+      return rows;
+    }
+
+    function balanceOf(account) {
+      const rows = linesFor(account);
+      const inn = rows.reduce((s, r) => s + r.inn, 0);
+      const out = rows.reduce((s, r) => s + r.out, 0);
+      return Number(account.openingBalance || 0) + inn - out;
+    }
+
+    function movementCount(account) {
+      return linesFor(account).length;
+    }
+
+    async function deleteAccount(id) {
+      if (!isAdmin) return alert("Only admin can delete accounts.");
+      const account = accounts.find((a) => a.id === id);
+      if (!account) return;
+
+      const used = movementCount(account);
+      if (used === 0) {
+        if (!confirm("Delete account \"" + account.name + "\"?")) return;
+      } else {
+        const ok = confirm(
+          "\"" + account.name + "\" has " + used + " movement(s).\n\n" +
+          "Delete the account only?\n" +
+          "Past sales/expenses/transfers stay in history under this name.\n" +
+          "You will not be able to post new money to this account until you create it again."
+        );
+        if (!ok) return;
+      }
+
+      try {
+        await deleteDoc(doc(db, "accounts", id));
+        await refresh();
+      } catch (err) {
+        alert("Delete failed: " + err.message);
+      }
+    }
+
+    function openCreateAccount() {
+      document.getElementById("editingAccountId").value = "";
+      document.getElementById("accountModalTitle").textContent = "Add account";
+      document.getElementById("accountForm").reset();
+      document.getElementById("openingBalance").value = "0";
+      document.getElementById("openingBalance").disabled = false;
+      document.getElementById("accountModal").style.display = "flex";
+    }
+
+    function openEditAccount(id) {
+      const account = accounts.find((a) => a.id === id);
+      if (!account) return;
+      document.getElementById("editingAccountId").value = account.id;
+      document.getElementById("accountModalTitle").textContent = "Edit account";
+      document.getElementById("accountName").value = account.name || "";
+      document.getElementById("accountType").value = account.type || "Bank";
+      document.getElementById("openingBalance").value = account.openingBalance || 0;
+      document.getElementById("openingBalance").disabled = true;
+      document.getElementById("accountModal").style.display = "flex";
+    }
+
+    function fillSelects() {
+      const options = accounts.map((a) =>
+        `<option value="${esc(a.id)}">${esc(a.name)}</option>`
+      ).join("");
+      document.getElementById("fromAccount").innerHTML = options;
+      document.getElementById("toAccount").innerHTML = options;
+      document.getElementById("adjustAccount").innerHTML = options;
+      const filter = document.getElementById("filterAccount");
+      const current = filter.value;
+      filter.innerHTML = `<option value="">All accounts</option>` +
+        accounts.map((a) =>
+          `<option value="${esc(a.name)}">${esc(a.name)}</option>`
+        ).join("");
+      filter.value = current;
+    }
+
+    function render() {
+      fillSelects();
+      const cards = document.getElementById("accountCards");
+      cards.innerHTML = "";
+      let grand = 0;
+
+      accounts.forEach((a) => {
+        const bal = balanceOf(a);
+        grand += bal;
+        const div = document.createElement("div");
+        div.className = "stat-card";
+        div.innerHTML = `
+          <h3>${esc(a.name)} <small style="font-weight:400;color:#888;">(${esc(a.type || "-")})</small></h3>
+          <p class="stat-number" style="${bal < 0 ? "color:#c0392b;" : ""}">${money(bal)}</p>
+          <small>Opening ${money(a.openingBalance || 0)} · ${movementCount(a)} movements</small>
+          ${isAdmin ? `
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn-edit" data-edit="${esc(a.id)}">Edit</button>
+            <button type="button" class="btn-delete" data-del="${esc(a.id)}">Delete</button>
+          </div>` : ""}`;
+        cards.appendChild(div);
+      });
+
+      if (accounts.length) {
+        const total = document.createElement("div");
+        total.className = "stat-card";
+        total.innerHTML = `
+          <h3>Total in all accounts</h3>
+          <p class="stat-number" style="color:${grand < 0 ? "#c0392b" : "#1e7a46"};">${money(grand)}</p>`;
+        cards.appendChild(total);
+      }
+
+      cards.querySelectorAll("[data-del]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteAccount(btn.dataset.del));
+      });
+      cards.querySelectorAll("[data-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => openEditAccount(btn.dataset.edit));
+      });
+
+      const mixed = sales
+        .filter((s) => s.paymentMethod === "Mixed")
+        .reduce((n, s) => n + saleAmountIn(s), 0);
+      const note = document.getElementById("mixedNote");
+      if (mixed > 0) {
+        note.style.display = "block";
+        note.textContent = "Mixed sales not in one account yet: " + money(mixed) + ".";
+      } else {
+        note.style.display = "none";
+      }
+
+      const filter = document.getElementById("filterAccount").value;
+      let rows = [];
+      accounts.forEach((a) => {
+        if (!filter || filter === a.name) rows = rows.concat(linesFor(a));
+      });
+      rows.sort((a, b) => timeOf(b.date) - timeOf(a.date));
+
+      const body = document.getElementById("statementBody");
+      body.innerHTML = "";
+      document.getElementById("noRows").style.display = rows.length ? "none" : "block";
+      rows.forEach((r) => {
+        const date = r.date && r.date.toDate ? r.date.toDate().toLocaleString() : "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(date)}</td>
+          <td>${esc(r.account)}</td>
+          <td>${esc(r.type)}</td>
+          <td>${esc(r.details)}</td>
+          <td>${r.inn ? money(r.inn) : "-"}</td>
+          <td>${r.out ? money(r.out) : "-"}</td>
+          <td>${esc(r.by)}</td>`;
+        body.appendChild(tr);
+      });
+    }
+
+    document.getElementById("filterAccount").addEventListener("change", render);
+
+    document.getElementById("addAccountBtn").addEventListener("click", () => {
+      if (!isAdmin) return alert("Only admin can add accounts.");
+      openCreateAccount();
+    });
+
+    document.getElementById("transferBtn").addEventListener("click", () => {
+      document.getElementById("transferForm").reset();
+      fillSelects();
+      document.getElementById("transferModal").style.display = "flex";
+    });
+
+    document.getElementById("adjustBtn").addEventListener("click", () => {
+      document.getElementById("adjustForm").reset();
+      fillSelects();
+      document.getElementById("adjustModal").style.display = "flex";
+    });
+
+    document.getElementById("accountForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!isAdmin) return alert("Only admin can manage accounts.");
+
+      const name = document.getElementById("accountName").value.trim();
+      const type = document.getElementById("accountType").value;
+      const editingId = document.getElementById("editingAccountId").value;
+      const opening = Number(document.getElementById("openingBalance").value) || 0;
+
+      if (!name) return alert("Enter account name.");
+      if (accountByName(name, editingId || null)) {
+        return alert("An account with that name already exists.");
+      }
+
+      try {
+        if (editingId) {
+          await updateDoc(doc(db, "accounts", editingId), {
+            name,
+            type,
+            updatedAt: serverTimestamp()
+          });
+        } else {
+          await addDoc(collection(db, "accounts"), {
+            name,
+            type,
+            openingBalance: opening,
+            createdAt: serverTimestamp()
+          });
+        }
+        document.getElementById("accountModal").style.display = "none";
+        await refresh();
+      } catch (err) {
+        alert("Save failed: " + err.message);
+      }
+    });
+
+    document.getElementById("transferForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const from = accounts.find((a) => a.id === document.getElementById("fromAccount").value);
+      const to = accounts.find((a) => a.id === document.getElementById("toAccount").value);
+      const amount = Number(document.getElementById("transferAmount").value);
+      if (!from || !to || from.id === to.id) return alert("Choose two different accounts.");
+      if (balanceOf(from) < amount) return alert("Not enough money in " + from.name);
+      await addDoc(collection(db, "transfers"), {
+        fromId: from.id, fromName: from.name,
+        toId: to.id, toName: to.name,
+        amount,
+        note: document.getElementById("transferNote").value.trim() || null,
+        userEmail: currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("transferModal").style.display = "none";
+      await refresh();
+    });
+
+    document.getElementById("adjustForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const account = accounts.find((a) => a.id === document.getElementById("adjustAccount").value);
+      const direction = document.getElementById("adjustDir").value;
+      const amount = Number(document.getElementById("adjustAmount").value);
+      if (!account) return;
+      if (direction === "out" && balanceOf(account) < amount) {
+        return alert("Not enough money in " + account.name);
+      }
+      await addDoc(collection(db, "cash_adjustments"), {
+        accountId: account.id,
+        accountName: account.name,
+        direction,
+        amount,
+        reason: document.getElementById("adjustReason").value.trim(),
+        userEmail: currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("adjustModal").style.display = "none";
+      await refresh();
+    });
+
+    await ensureDefaults();
+    await refresh();
+  </script>
+</body>
+</html>

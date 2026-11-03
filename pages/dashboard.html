@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="../manifest.webmanifest">
+<script src="../js/pwa.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Didge Sports Stock Pro</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Didge Sports</h2>
+      <p>Stock Pro</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" data-page="dashboard" class="nav-item active"><span>📊</span> Dashboard</a>
+      <a href="products.html" data-page="products" class="nav-item"><span>📦</span> Products</a>
+      <a href="import.html" data-page="import" class="nav-item"><span>📥</span> Import</a>
+      <a href="stock.html" data-page="stock" class="nav-item"><span>🔄</span> Stock</a>
+      <a href="sales.html" data-page="sales" class="nav-item"><span>🛒</span> Sales</a>
+      <a href="customers.html" data-page="customers" class="nav-item"><span>🧑‍🤝‍🧑</span> Customers</a>
+      <a href="suppliers.html" data-page="suppliers" class="nav-item"><span>🚚</span> Suppliers</a>
+      <a href="cash.html" data-page="cash" class="nav-item"><span>💰</span> Cash & Bank</a>
+      <a href="expenses.html" data-page="expenses" class="nav-item"><span>📉</span> Expenses</a>
+      <a href="money.html" data-page="money" class="nav-item"><span>🧾</span> Money</a>
+      <a href="staff.html" data-page="staff" class="nav-item"><span>👤</span> Staff</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1>Dashboard</h1>
+        <p id="welcomeRole" style="font-size:13px; color:#666;"></p>
+      </div>
+      <div class="user-info">
+        <span id="userEmail">Loading...</span>
+      </div>
+    </header>
+
+    <section class="dashboard-content">
+
+      <div class="stats-grid">
+        <div class="stat-card" data-roles="admin,cashier">
+          <h3>Today's Sales</h3>
+          <p class="stat-number" id="todaySales">KES 0</p>
+          <small id="todayCount">0 sales</small>
+        </div>
+        <div class="stat-card" data-roles="admin,cashier">
+          <h3>This Month</h3>
+          <p class="stat-number" id="monthSales">KES 0</p>
+          <small id="monthCount">0 sales</small>
+        </div>
+        <div class="stat-card" data-roles="admin,cashier">
+          <h3>This Year</h3>
+          <p class="stat-number" id="yearSales">KES 0</p>
+          <small id="yearCount">0 sales</small>
+        </div>
+        <div class="stat-card">
+          <h3>Low Stock Items</h3>
+          <p class="stat-number warning" id="lowStock">0</p>
+        </div>
+        <div class="stat-card" data-roles="admin,inventory">
+          <h3>Stock value (cost)</h3>
+          <p class="stat-number" id="stockValue">KES 0</p>
+        </div>
+        <div class="stat-card" data-roles="admin,inventory">
+          <h3>Stock at selling price</h3>
+          <p class="stat-number" id="stockRetail">KES 0</p>
+        </div>
+      </div>
+
+      <div class="table-card" data-roles="admin,cashier" style="margin-top: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px;">
+          <h3 style="color:#1e3c72; margin:0;">Recent Sales</h3>
+          <a href="sales.html" style="font-size:14px; color:#1e3c72;">View All →</a>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Sold By</th>
+            </tr>
+          </thead>
+          <tbody id="recentSalesBody"></tbody>
+        </table>
+        <p id="noRecent" class="empty-state" style="display:none; padding:30px;">No sales yet.</p>
+      </div>
+
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth, db } from '../js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+    import { guard } from "../js/roles.js";
+
+    await guard("dashboard");
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "../index.html";
+    });
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    async function loadDashboard() {
+      const salesSnap = await getDocs(query(collection(db, "sales"), orderBy("createdAt", "desc")));
+      const sales = [];
+      salesSnap.forEach(doc => sales.push(doc.data()));
+
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+
+      let todayTotal = 0, todayCount = 0;
+      let monthTotal = 0, monthCount = 0;
+      let yearTotal = 0, yearCount = 0;
+
+      sales.forEach(sale => {
+        if (!sale.createdAt) return;
+        const saleDate = sale.createdAt.toDate();
+        if (saleDate >= todayStart) {
+          todayTotal += sale.total || 0;
+          todayCount++;
+        }
+        if (saleDate >= monthStart) {
+          monthTotal += sale.total || 0;
+          monthCount++;
+        }
+        if (saleDate >= yearStart) {
+          yearTotal += sale.total || 0;
+          yearCount++;
+        }
+      });
+
+      const todaySales = document.getElementById('todaySales');
+      if (todaySales) {
+        todaySales.textContent = "KES " + todayTotal.toLocaleString();
+        document.getElementById('todayCount').textContent = todayCount + " sales";
+        document.getElementById('monthSales').textContent = "KES " + monthTotal.toLocaleString();
+        document.getElementById('monthCount').textContent = monthCount + " sales";
+        document.getElementById('yearSales').textContent = "KES " + yearTotal.toLocaleString();
+        document.getElementById('yearCount').textContent = yearCount + " sales";
+      }
+
+      const tbody = document.getElementById('recentSalesBody');
+      const noRecent = document.getElementById('noRecent');
+      if (tbody && noRecent) {
+        tbody.innerHTML = "";
+        if (sales.length === 0) {
+          noRecent.style.display = "block";
+        } else {
+          noRecent.style.display = "none";
+          sales.slice(0, 8).forEach(sale => {
+            const date = sale.createdAt ? sale.createdAt.toDate().toLocaleString() : "-";
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${date}</td>
+              <td>${sale.productName}${sale.variant ? " (" + sale.variant + ")" : ""}</td>
+              <td>${sale.quantity}</td>
+              <td><strong>KES ${(sale.total || 0).toLocaleString()}</strong></td>
+              <td>${sale.paymentMethod}</td>
+              <td>${sale.userEmail}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      const productsSnap = await getDocs(collection(db, "products"));
+      let lowCount = 0;
+      let stockCost = 0;
+      let stockRetail = 0;
+      productsSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.hasVariants && data.variants) {
+          data.variants.forEach(v => {
+            const qty = Number(v.stock) || 0;
+            if (qty <= 5) lowCount++;
+            stockCost += qty * (Number(v.cost) || 0);
+            stockRetail += qty * (Number(v.selling) || 0);
+          });
+        } else {
+          const qty = Number(data.stock) || 0;
+          if (qty <= 5) lowCount++;
+          stockCost += qty * (Number(data.cost) || 0);
+          stockRetail += qty * (Number(data.selling) || 0);
+        }
+      });
+      document.getElementById('lowStock').textContent = lowCount;
+      const stockValue = document.getElementById('stockValue');
+      if (stockValue) stockValue.textContent = "KES " + Math.round(stockCost).toLocaleString();
+      const stockRetailEl = document.getElementById('stockRetail');
+      if (stockRetailEl) stockRetailEl.textContent = "KES " + Math.round(stockRetail).toLocaleString();
+    }
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>
